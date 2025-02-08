@@ -95,7 +95,6 @@ namespace OrderManagementService.Infrastructure.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     SpecialInstructions = table.Column<string>(type: "nvarchar(2000)", maxLength: 2000, nullable: true),
                     TotalAmount = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
-                    RowVersion = table.Column<byte[]>(type: "rowversion", rowVersion: true, nullable: false),
                     CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     LastUpdatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
@@ -103,7 +102,8 @@ namespace OrderManagementService.Infrastructure.Migrations
                     Status = table.Column<byte>(type: "tinyint", nullable: false),
                     Type = table.Column<byte>(type: "tinyint", nullable: false),
                     DeliveryStaffId = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    FulfillmentTimeMinutes = table.Column<int>(type: "int", nullable: false)
+                    FulfillmentTimeMinutes = table.Column<int>(type: "int", nullable: true),
+                    RowVersion = table.Column<byte[]>(type: "rowversion", rowVersion: true, nullable: false)
                 },
                 constraints: table =>
                 {
@@ -389,8 +389,6 @@ namespace OrderManagementService.Infrastructure.Migrations
                 name: "IX_Orders_Type",
                 table: "Orders",
                 column: "Type");
-            
-            DbInit.Seed(migrationBuilder);
         }
 
         /// <inheritdoc />

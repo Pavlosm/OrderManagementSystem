@@ -327,7 +327,7 @@ namespace OrderManagementService.Infrastructure.Migrations
                     b.Property<string>("DeliveryStaffId")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("FulfillmentTimeMinutes")
+                    b.Property<int?>("FulfillmentTimeMinutes")
                         .HasColumnType("int");
 
                     b.Property<DateTime?>("LastUpdatedAt")

@@ -91,7 +91,8 @@ public class OrderRepository : IOrderRepository
 
     public async Task<long> UpdateStatusAsync(
         int orderId, 
-        OrderStatus status, 
+        OrderStatus status,
+        int? fulfillmentTimeMinutes,
         DateTime updatedAt, 
         string updatedBy,
         byte[] rowVersion)
@@ -102,6 +103,7 @@ public class OrderRepository : IOrderRepository
             Status = status, 
             LastUpdatedAt = updatedAt, 
             LastUpdatedBy = updatedBy,
+            FulfillmentTimeMinutes = fulfillmentTimeMinutes,
             RowVersion = rowVersion
         };
         

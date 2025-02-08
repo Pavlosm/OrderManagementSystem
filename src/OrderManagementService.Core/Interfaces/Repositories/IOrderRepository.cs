@@ -13,6 +13,7 @@ public interface IOrderRepository
     Task<long> UpdateStatusAsync(
         int orderId, 
         OrderStatus status,
+        int? fulfillmentTimeMinutes,
         DateTime updatedAt, 
         string updatedBy,
         byte[] rowVersion);

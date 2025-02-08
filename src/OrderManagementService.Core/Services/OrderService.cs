@@ -167,6 +167,7 @@ public class OrderService : IOrderService
             var updatedCount = await _orderRepository.UpdateStatusAsync(
                 orderId, 
                 orderState.Status, 
+                orderState.FulfillmentTimeMinutes,
                 orderState.UpdatedAt ?? DateTime.UtcNow, 
                 userId,
                 order.RowVersion);

@@ -12,7 +12,7 @@ using OrderManagementService.Infrastructure;
 namespace OrderManagementService.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250208144546_Initial")]
+    [Migration("20250208153327_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
@@ -330,7 +330,7 @@ namespace OrderManagementService.Infrastructure.Migrations
                     b.Property<string>("DeliveryStaffId")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("FulfillmentTimeMinutes")
+                    b.Property<int?>("FulfillmentTimeMinutes")
                         .HasColumnType("int");
 
                     b.Property<DateTime?>("LastUpdatedAt")
