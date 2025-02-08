@@ -110,40 +110,95 @@ public class OrderService : IOrderService
         }
     }
 
-    public async Task<ServiceResult<Order>> SetDeliveryStatus(int userId, OrderStatus status)
+    public async Task<VoidServiceResult> UpdateStatusAsync(string userId, int orderId, OrderStatus statusId)
     {
-        // TODO load user from repository
-        // TODO check that the user is a delivery staff
-        // TODO load order from repository
-        // TODO check that the order is assigned to the user
-        // TODO update order status - if possible
-        throw new NotImplementedException();
-    }
-    // public async Task UpdateOrderStatusAsync(Guid orderId, OrderStatus newStatus)
-    // {
-    //     var order = await _orderRepository.GetByIdAsync(orderId) 
-    //         ?? throw new InvalidOperationException("Order not found");
-    //
-    //     // Validate status transition
-    //     if (!IsValidStatusTransition(order.Status, newStatus))
-    //         throw new InvalidOperationException($"Invalid status transition from {order.Status} to {newStatus}");
-    //
-    //     order.Status = newStatus;
-    //     await _orderRepository.UpdateAsync(order);
-    // }
-
-    public bool IsValidStatusTransition(OrderStatus currentStatus, OrderStatus newStatus)
-    {
-        return (currentStatus, newStatus) switch
+        try
         {
-            (OrderStatus.Pending, OrderStatus.Preparing) => true,
-            (OrderStatus.Preparing, OrderStatus.ReadyForPickup) => true,
-            (OrderStatus.Preparing, OrderStatus.ReadyForDelivery) => true,
-            (OrderStatus.ReadyForDelivery, OrderStatus.OutForDelivery) => true,
-            (OrderStatus.OutForDelivery, OrderStatus.Delivered) => true,
-            (OrderStatus.OutForDelivery, OrderStatus.UnableToDeliver) => true,
-            (OrderStatus.Pending, OrderStatus.Cancelled) => true,
-            _ => false
-        };
+            var order = await _orderRepository.GetBasicByIdAsync(orderId);
+            if (order == null)
+            {
+                return VoidServiceResult.Fail(ServiceErrorCode.NotFound, "Order not found");
+            }
+        
+            var (orderState, error) = OrderState.Create(order);
+            if (orderState == null)
+            {
+                return VoidServiceResult.Fail(ServiceErrorCode.BadRequest, error);
+            }
+
+            var (success, err) = orderState.ChangeStatus(statusId);
+            if (!success)
+            {
+                return VoidServiceResult.Fail(ServiceErrorCode.BadRequest, err ?? "Unknown error");
+            }
+        
+            var updatedCount = await _orderRepository.UpdateStatusAsync(
+                orderId, 
+                orderState.Status, 
+                orderState.UpdatedAt ?? DateTime.UtcNow, 
+                userId);
+            
+            if (updatedCount > 0)
+            {
+                // TODO publish event
+            }
+        
+            return updatedCount switch
+            {
+                0 => VoidServiceResult.Fail(ServiceErrorCode.NotFound, "Update failed, order not found"),
+                > 1 => VoidServiceResult.Fail(ServiceErrorCode.Generic, "This should never happen"),
+                _ => VoidServiceResult.Ok()
+            };
+        }
+        catch (Exception ex)
+        {
+            return VoidServiceResult.Fail(ServiceErrorCode.Generic, ex.Message, ex);
+        }
+    }
+    
+    public async Task<VoidServiceResult> SetDeliveryStatus(string userId, int orderId, string deliveryStaffId)
+    {
+        try
+        {
+            var order = await _orderRepository.GetBasicByIdAsync(orderId);
+            if (order == null)
+            {
+                return VoidServiceResult.Fail(ServiceErrorCode.NotFound, "Order not found");
+            }
+        
+            var (orderState, error) = OrderState.Create(order);
+            if (orderState == null)
+            {
+                return VoidServiceResult.Fail(ServiceErrorCode.BadRequest, error);
+            }
+
+            var (success, err) = orderState.SetDeliveryStaffId(deliveryStaffId);
+            if (!success)
+            {
+                return VoidServiceResult.Fail(ServiceErrorCode.BadRequest, err ?? "Unknown error");
+            }
+        
+            var updatedCount = await _orderRepository.SetDeliveryStaffAsync(
+                orderId, 
+                orderState.DeliveryStaffId ?? string.Empty, 
+                orderState.UpdatedAt ?? DateTime.UtcNow,
+                userId);
+            
+            if (updatedCount > 0)
+            {
+                // TODO publish event
+            }
+        
+            return updatedCount switch
+            {
+                0 => VoidServiceResult.Fail(ServiceErrorCode.NotFound, "Update failed, order not found"),
+                > 1 => VoidServiceResult.Fail(ServiceErrorCode.Generic, "This should never happen"),
+                _ => VoidServiceResult.Ok()
+            };
+        }
+        catch (Exception ex)
+        {
+            return VoidServiceResult.Fail(ServiceErrorCode.Generic, ex.Message, ex);
+        }
     }
 } 

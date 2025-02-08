@@ -1,20 +1,18 @@
 ﻿namespace OrderManagementService.Core.Interfaces;
 
-public class ServiceResult<T>
+public class ServiceResult<T> : IServiceResult
 {
     public bool Success => Error == null;
-    public readonly ServiceError? Error;
+    public ServiceError? Error { get; }
     public readonly T? Data;
 
     private ServiceResult(T? data)
     {
         Data = data;
     }
-     
+
     private ServiceResult(ServiceErrorCode code, string? message, Exception? ex)
-    {
-        Error = new ServiceError(code, message ?? string.Empty, ex);
-    }
+        : this(new ServiceError(code, message ?? string.Empty, ex)) {}
 
     private ServiceResult(ServiceError error)
     {
