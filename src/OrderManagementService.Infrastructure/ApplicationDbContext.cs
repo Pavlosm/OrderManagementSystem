@@ -53,15 +53,19 @@ public class ApplicationDbContext(DbContextOptions options) : IdentityDbContext<
         
         modelBuilder
             .Entity<Order>()
-            .HasOne<OrderDeliveryAddress>()
+            .HasOne(o => o.DeliveryAddress)
             .WithOne()
-            .HasForeignKey<OrderDeliveryAddress>(a => a.OrderId);
+            .HasForeignKey<OrderDeliveryAddress>(a => a.OrderId)
+            .IsRequired()
+            .HasConstraintName("FK_OrderDeliveryAddress_To_Order");
         
         modelBuilder
             .Entity<Order>()
-            .HasOne<OrderContactDetails>()
+            .HasOne(o => o.ContactDetails)
             .WithOne()
-            .HasForeignKey<OrderContactDetails>(a => a.OrderId);
+            .HasForeignKey<OrderContactDetails>(a => a.OrderId)
+            .IsRequired()
+            .HasConstraintName("FK_OrderContactDetails_To_Order");
         
         modelBuilder
             .Entity<Order>()

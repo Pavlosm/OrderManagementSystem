@@ -1,12 +1,15 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using OrderManagementService.Core.Interfaces;
 using OrderManagementService.Core.Interfaces.Services;
 using OrderManagementService.Core.Models;
+using OrderManagementService.Infrastructure;
 
 namespace OrderManagementService.WebApi.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[AllowAnonymous]
 public class MenuItemController : ControllerBase
 {
     private readonly ILogger<MenuItemController> _logger;
@@ -68,7 +71,7 @@ public class MenuItemController : ControllerBase
     [HttpPost("")]
     public async Task<IActionResult> CreateAsync([FromBody] MenuItemRequestData data)
     {
-        var createResult = await _menuItemService.CreateAsync(Guid.NewGuid().ToString(), data);
+        var createResult = await _menuItemService.CreateAsync(DbInit.DbAdminId, data);
         if (createResult.Success)
         {
             return Ok(createResult.Data);
@@ -91,7 +94,7 @@ public class MenuItemController : ControllerBase
     [HttpPost("{id:int}")]
     public async Task<IActionResult> CreateAsync(int id, [FromBody] MenuItemRequestData data)
     {
-        var createResult = await _menuItemService.UpdateAsync(Guid.NewGuid().ToString(), id, data);
+        var createResult = await _menuItemService.UpdateAsync(DbInit.DbAdminId, id, data);
         if (createResult.Success)
         {
             return Ok(createResult.Data);

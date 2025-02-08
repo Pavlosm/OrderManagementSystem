@@ -25,21 +25,24 @@ public class OrderRepository : IOrderRepository
         return order;
     }
 
+    private static readonly Expression<Func<Order, OrderBasic>> MapToBasicExpr = o => new OrderBasic
+    {
+        Id = o.Id,
+        Status = o.Status,
+        Type = o.Type,
+        CreatedAt = o.CreatedAt,
+        CreatedBy = o.CreatedBy,
+        LastUpdatedAt = o.LastUpdatedAt,
+        LastUpdatedBy = o.LastUpdatedBy,
+        DeliveryStaffId = o.DeliveryStaffId,
+        FulfillmentTimeMinutes = o.FulfillmentTimeMinutes,
+        RowVersion = o.RowVersion
+    };
+
     public async Task<OrderBasic?> GetBasicByIdAsync(int id)
     {
         var order = await _context.Orders
-            .Select(o => new OrderBasic
-            {
-                Id = o.Id,
-                Status = o.Status,
-                Type = o.Type,
-                CreatedAt = o.CreatedAt,
-                CreatedBy = o.CreatedBy,
-                LastUpdatedAt = o.LastUpdatedAt,
-                LastUpdatedBy= o.LastUpdatedBy,
-                DeliveryStaffId = o.DeliveryStaffId,
-                FulfillmentTimeMinutes = o.FulfillmentTimeMinutes
-            })
+            .Select(MapToBasicExpr)
             .FirstOrDefaultAsync(o => o.Id == id);
 
         return order;
@@ -51,27 +54,23 @@ public class OrderRepository : IOrderRepository
         return orders;
     }
 
-    public async Task<List<OrderBasic>> GetByStatusAsync(OrderStatus status)
+    public async Task<List<OrderBasic>> GetByStatusAndTypeAsync(OrderStatus? status, OrderType? orderType)
     {
-        var orders = await SearchAsync(o => o.Status == status);
-        return orders;
+        return status switch
+        {
+            null when orderType == null => await SearchAsync(),
+            null => await SearchAsync(o => o.Type == orderType),
+            _ => orderType switch
+            {
+                null => await SearchAsync(o => o.Status == status),
+                _ => await SearchAsync(o => o.Status == status && o.Type == orderType)
+            }
+        };
     }
 
     private async Task<List<OrderBasic>> SearchAsync(Expression<Func<OrderBasic, bool>>? predicate = null)
     {
-        var query = _context.Orders
-            .Select(o => new OrderBasic
-            {
-                Id = o.Id,
-                Status = o.Status,
-                Type = o.Type,
-                CreatedAt = o.CreatedAt,
-                CreatedBy = o.CreatedBy,
-                LastUpdatedAt = o.LastUpdatedAt,
-                LastUpdatedBy = o.LastUpdatedBy,
-                DeliveryStaffId = o.DeliveryStaffId,
-                FulfillmentTimeMinutes = o.FulfillmentTimeMinutes
-            });
+        var query = _context.Orders.Select(MapToBasicExpr);
 
         if (predicate != null)
         {
@@ -79,30 +78,31 @@ public class OrderRepository : IOrderRepository
         }
 
         var orders = await query.ToListAsync();
-
         return orders;
     }
 
     public async Task<int> CreateAsync(Order order)
     {
-        await using var dbContextTransaction = await _context.Database.BeginTransactionAsync();
+        // no transaction needed as per documentation, SaveChangesAsync will handle it
         _context.Orders.Add(order);
-        _context.OrderItems.AddRange(order.Items);
-        _context.OrderDeliveryAddresses.Add(order.DeliveryAddress);
-        _context.OrderContactDetails.Add(order.ContactDetails);
         await _context.SaveChangesAsync();
-        await dbContextTransaction.CommitAsync();
         return order.Id;
     }
 
-    public async Task<long> UpdateStatusAsync(int orderId, OrderStatus status, DateTime updatedAt, string updatedBy)
+    public async Task<long> UpdateStatusAsync(
+        int orderId, 
+        OrderStatus status, 
+        DateTime updatedAt, 
+        string updatedBy,
+        byte[] rowVersion)
     {
         var order = new Order
         {
             Id = orderId, 
             Status = status, 
             LastUpdatedAt = updatedAt, 
-            LastUpdatedBy = updatedBy
+            LastUpdatedBy = updatedBy,
+            RowVersion = rowVersion
         };
         
         _context.Orders.Attach(order);
@@ -115,14 +115,20 @@ public class OrderRepository : IOrderRepository
         return modifiedCount;
     }
 
-    public async Task<long> SetDeliveryStaffAsync(int orderId, string deliveryStuffId, DateTime updatedAt, string updatedBy)
+    public async Task<long> SetDeliveryStaffAsync(
+        int orderId,
+        string deliveryStuffId, 
+        DateTime updatedAt, 
+        string updatedBy,
+        byte[] rowVersion)
     {
         var order = new Order
         {
             Id = orderId, 
             DeliveryStaffId = deliveryStuffId, 
             LastUpdatedAt = updatedAt, 
-            LastUpdatedBy = updatedBy
+            LastUpdatedBy = updatedBy,
+            RowVersion = rowVersion
         };
         
         _context.Orders.Attach(order);

@@ -5,6 +5,8 @@ namespace OrderManagementService.Core.Entities;
 public class OrderDeliveryAddress
 {
     [Key]
+    public int Id { get; set; }
+    
     public int OrderId { get; set; }
     
     [Required]

@@ -31,4 +31,10 @@ public class OrderBasic : AuditInfo
     /// Fulfillment time in minutes.
     /// </summary>
     public int FulfillmentTimeMinutes { get; set; }
+    
+    /// <summary>
+    /// Gets or sets the row version for concurrency control.
+    /// </summary>
+    [Timestamp]
+    public byte[] RowVersion { get; set; } = null!;
 }

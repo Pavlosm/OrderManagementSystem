@@ -5,6 +5,8 @@ namespace OrderManagementService.Core.Models;
 public class OrderPlacementRequest
 {
     public OrderType OrderType { get; set; }
+    
+    public OrderContactDetails ContactDetails { get; set; } = new();
     public OrderDeliveryAddress? DeliveryAddress { get; set; }
     
     public string? SpecialInstructions { get; set; }

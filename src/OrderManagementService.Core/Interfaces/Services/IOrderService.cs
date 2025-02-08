@@ -5,7 +5,9 @@ namespace OrderManagementService.Core.Interfaces.Services;
 
 public interface IOrderService
 {
+    Task<ServiceResult<Order>> GetFullOrderAsync(int id);
+    Task<ServiceResult<List<OrderBasic>>> FilterOrdersAsync(OrderStatus? status, OrderType? type);
     Task<ServiceResult<Order>> PlaceOrderAsync(OrderPlacementRequest order);
-    // Task UpdateOrderStatusAsync(string orderId, int userId, OrderStatus newStatus);
-    // Task AssignDeliveryStaff(string orderId, int userId, int staffId);
+    Task<VoidServiceResult> UpdateStatusAsync(string userId, int orderId, OrderStatus statusId);
+    Task<VoidServiceResult> SetDeliveryStatus(string userId, int orderId, string deliveryStaffId);
 }

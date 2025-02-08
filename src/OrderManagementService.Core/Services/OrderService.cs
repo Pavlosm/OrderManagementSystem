@@ -18,7 +18,35 @@ public class OrderService : IOrderService
         _menuItemService = menuItemService;
         _mapService = mapService;
     }
-    
+
+    public async Task<ServiceResult<Order>> GetFullOrderAsync(int id)
+    {
+        try
+        {
+            var order = await _orderRepository.GetByIdAsync(id);
+            return order == null 
+                ? ServiceResult<Order>.Fail(ServiceErrorCode.NotFound, "Order not found") 
+                : ServiceResult<Order>.Ok(order);
+        }
+        catch (Exception ex)
+        {
+            return ServiceResult<Order>.Fail(ServiceErrorCode.Generic, ex.Message, ex);
+        }
+    }
+
+    public async Task<ServiceResult<List<OrderBasic>>> FilterOrdersAsync(OrderStatus? status, OrderType? type)
+    {
+        try
+        {
+            var orders = await _orderRepository.GetByStatusAndTypeAsync(status, type);
+            return ServiceResult<List<OrderBasic>>.Ok(orders);
+        }
+        catch (Exception ex)
+        {
+            return ServiceResult<List<OrderBasic>>.Fail(ServiceErrorCode.Generic, ex.Message, ex);
+        }
+    }
+
     public async Task<ServiceResult<Order>> PlaceOrderAsync(OrderPlacementRequest orderPlacementRequest)
     {
         try
@@ -77,7 +105,11 @@ public class OrderService : IOrderService
                 Status = OrderStatus.Pending,
                 Type = orderPlacementRequest.OrderType,
                 Items = [],
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = DateTime.UtcNow,
+                CreatedBy = "TODO",
+                ContactDetails = orderPlacementRequest.ContactDetails,
+                DeliveryAddress = orderPlacementRequest.DeliveryAddress,
+                SpecialInstructions = orderPlacementRequest.SpecialInstructions,
             };
             
             foreach (var (menuItemId, details) in orderPlacementRequest.Items)
@@ -136,7 +168,8 @@ public class OrderService : IOrderService
                 orderId, 
                 orderState.Status, 
                 orderState.UpdatedAt ?? DateTime.UtcNow, 
-                userId);
+                userId,
+                order.RowVersion);
             
             if (updatedCount > 0)
             {
@@ -182,7 +215,8 @@ public class OrderService : IOrderService
                 orderId, 
                 orderState.DeliveryStaffId ?? string.Empty, 
                 orderState.UpdatedAt ?? DateTime.UtcNow,
-                userId);
+                userId,
+                order.RowVersion);
             
             if (updatedCount > 0)
             {

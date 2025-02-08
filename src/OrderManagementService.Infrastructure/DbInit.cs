@@ -5,6 +5,8 @@ namespace OrderManagementService.Infrastructure;
 
 public static class DbInit
 {
+    public static string DbAdminId = "51b80095-79b1-42d4-9b43-ae3d7c27e318";
+    
     public static void Seed(MigrationBuilder migrationBuilder)
     {
         var categoriesCols = new string[]
@@ -33,14 +35,12 @@ public static class DbInit
         {
             "Id", "Name", "NormalizedName"
         };
-
-        var adminId = Guid.NewGuid().ToString();
         
         migrationBuilder.InsertData(
             "AspNetUsers",
             userCols,
             [
-                adminId, "superuser", "superuser@gmail.com,", true, Guid.NewGuid().ToString(), 0, 
+                DbAdminId, "superuser", "superuser@gmail.com,", true, Guid.NewGuid().ToString(), 0, 
                 true, false, false
             ]);
         
@@ -60,39 +60,39 @@ public static class DbInit
         migrationBuilder.InsertData(
             "Categories", 
             categoriesCols, 
-            ["Appetizer", DateTime.UtcNow, adminId]);
+            ["Appetizer", DateTime.UtcNow, DbAdminId]);
         migrationBuilder.InsertData(
             "Categories",
             categoriesCols, 
-            ["Main Course", DateTime.UtcNow, adminId]);
+            ["Main Course", DateTime.UtcNow, DbAdminId]);
         migrationBuilder.InsertData(
             "Categories", categoriesCols, 
-            ["Desert", DateTime.UtcNow, adminId]);
+            ["Desert", DateTime.UtcNow, DbAdminId]);
         migrationBuilder.InsertData(
             "Categories", 
             categoriesCols, 
-            ["Beverage", DateTime.UtcNow, adminId]);
+            ["Beverage", DateTime.UtcNow, DbAdminId]);
         
         migrationBuilder.InsertData(
             "MenuItem",
             menuItemCols,
-            ["Cheeseburger", 5.99m, true, DateTime.UtcNow, adminId]);
+            ["Cheeseburger", 5.99m, false, DateTime.UtcNow, DbAdminId]);
         migrationBuilder.InsertData(
             "MenuItem", 
             menuItemCols,
-            ["Pizza", 7.50, true, DateTime.UtcNow, adminId]);
+            ["Pizza", 7.50, false, DateTime.UtcNow, DbAdminId]);
         migrationBuilder.InsertData(
             "MenuItem", 
             menuItemCols,
-            ["Donut", 3.20m, true, DateTime.UtcNow, adminId]);
+            ["Donut", 3.20m, false, DateTime.UtcNow, DbAdminId]);
         migrationBuilder.InsertData(
             "MenuItem", 
             menuItemCols,
-            ["Water", 3.20m, true, DateTime.UtcNow, adminId]);
+            ["Water", 3.20m, false, DateTime.UtcNow, DbAdminId]);
         migrationBuilder.InsertData(
             "MenuItem", 
             menuItemCols,
-            ["Coke", 3.20m, true, DateTime.UtcNow, adminId]);
+            ["Coke", 3.20m, false, DateTime.UtcNow, DbAdminId]);
         
         migrationBuilder.InsertData("CategoryMenuItem", categoryMenuItemCols, [2, 1]);
         migrationBuilder.InsertData("CategoryMenuItem", categoryMenuItemCols, [2, 2]);

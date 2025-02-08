@@ -125,7 +125,7 @@ public class MenuItemService : IMenuItemService
         }
     }
 
-    public async Task<ServiceResult<List<MenuItem>>> GetAllMenuItemsAsync(bool inclideDeleted = true)
+    public async Task<ServiceResult<List<MenuItem>>> GetAllMenuItemsAsync(bool inclideDeleted)
     {
         try
         {

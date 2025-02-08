@@ -26,7 +26,7 @@ public class MenuItemRepository : IMenuItemRepository
             .ToListAsync();
     }
 
-    public async Task<List<MenuItem>> GetAllAsync(bool includeDeleted = false)
+    public async Task<List<MenuItem>> GetAllAsync(bool includeDeleted)
     {
         return includeDeleted
             ? await _context.Set<MenuItem>().ToListAsync()

@@ -32,11 +32,5 @@ public class Order : OrderBasic
     /// <summary>
     /// Gets or sets the delivery address for the order.
     /// </summary>
-    public virtual OrderDeliveryAddress DeliveryAddress { get; set; } = null!;
-
-    /// <summary>
-    /// Gets or sets the row version for concurrency control.
-    /// </summary>
-    [Timestamp]
-    public byte[] RowVersion { get; set; } = null!;
+    public OrderDeliveryAddress? DeliveryAddress { get; set; } = null!;
 }

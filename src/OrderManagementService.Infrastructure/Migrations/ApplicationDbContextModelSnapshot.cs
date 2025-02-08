@@ -317,18 +317,12 @@ namespace OrderManagementService.Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("ContactDetailsOrderId")
-                        .HasColumnType("int");
-
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("CreatedBy")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("DeliveryAddressOrderId")
-                        .HasColumnType("int");
 
                     b.Property<string>("DeliveryStaffId")
                         .HasColumnType("nvarchar(max)");
@@ -363,10 +357,6 @@ namespace OrderManagementService.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ContactDetailsOrderId");
-
-                    b.HasIndex("DeliveryAddressOrderId");
-
                     b.HasIndex("Status");
 
                     b.HasIndex("Type");
@@ -376,28 +366,40 @@ namespace OrderManagementService.Infrastructure.Migrations
 
             modelBuilder.Entity("OrderManagementService.Core.Entities.OrderContactDetails", b =>
                 {
-                    b.Property<int>("OrderId")
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
+                    b.Property<int>("OrderId")
+                        .HasColumnType("int");
+
                     b.Property<string>("PhoneNumber")
                         .IsRequired()
                         .HasMaxLength(10)
                         .HasColumnType("nvarchar(10)");
 
-                    b.HasKey("OrderId");
+                    b.HasKey("Id");
+
+                    b.HasIndex("OrderId")
+                        .IsUnique();
 
                     b.ToTable("OrderContactDetails");
                 });
 
             modelBuilder.Entity("OrderManagementService.Core.Entities.OrderDeliveryAddress", b =>
                 {
-                    b.Property<int>("OrderId")
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<int>("BuildingNumber")
                         .HasColumnType("int");
@@ -412,6 +414,9 @@ namespace OrderManagementService.Infrastructure.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
+                    b.Property<int>("OrderId")
+                        .HasColumnType("int");
+
                     b.Property<string>("PostalCode")
                         .IsRequired()
                         .HasMaxLength(10)
@@ -422,7 +427,10 @@ namespace OrderManagementService.Infrastructure.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
-                    b.HasKey("OrderId");
+                    b.HasKey("Id");
+
+                    b.HasIndex("OrderId")
+                        .IsUnique();
 
                     b.ToTable("OrderDeliveryAddresses");
                 });
@@ -525,39 +533,24 @@ namespace OrderManagementService.Infrastructure.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("OrderManagementService.Core.Entities.Order", b =>
-                {
-                    b.HasOne("OrderManagementService.Core.Entities.OrderContactDetails", "ContactDetails")
-                        .WithMany()
-                        .HasForeignKey("ContactDetailsOrderId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("OrderManagementService.Core.Entities.OrderDeliveryAddress", "DeliveryAddress")
-                        .WithMany()
-                        .HasForeignKey("DeliveryAddressOrderId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("ContactDetails");
-
-                    b.Navigation("DeliveryAddress");
-                });
-
             modelBuilder.Entity("OrderManagementService.Core.Entities.OrderContactDetails", b =>
                 {
                     b.HasOne("OrderManagementService.Core.Entities.Order", null)
-                        .WithOne()
+                        .WithOne("ContactDetails")
                         .HasForeignKey("OrderManagementService.Core.Entities.OrderContactDetails", "OrderId")
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("FK_OrderContactDetails_To_Order");
                 });
 
             modelBuilder.Entity("OrderManagementService.Core.Entities.OrderDeliveryAddress", b =>
                 {
                     b.HasOne("OrderManagementService.Core.Entities.Order", null)
-                        .WithOne()
+                        .WithOne("DeliveryAddress")
                         .HasForeignKey("OrderManagementService.Core.Entities.OrderDeliveryAddress", "OrderId")
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("FK_OrderDeliveryAddress_To_Order");
                 });
 
             modelBuilder.Entity("OrderManagementService.Core.Entities.OrderItem", b =>
@@ -577,6 +570,11 @@ namespace OrderManagementService.Infrastructure.Migrations
 
             modelBuilder.Entity("OrderManagementService.Core.Entities.Order", b =>
                 {
+                    b.Navigation("ContactDetails")
+                        .IsRequired();
+
+                    b.Navigation("DeliveryAddress");
+
                     b.Navigation("Items");
                 });
 #pragma warning restore 612, 618

@@ -9,5 +9,5 @@ public interface IMenuItemService
     Task<ServiceResult<MenuItem>> UpdateAsync(string userId, int id, MenuItemRequestData data);
     Task<ServiceResult<MenuItem>> GetByIdAsync(int id);
     Task<ServiceResult<List<MenuItem>>> GetByIdsAsync(List<int> ids);
-    Task<ServiceResult<List<MenuItem>>> GetAllMenuItemsAsync(bool availableOnly = false);
+    Task<ServiceResult<List<MenuItem>>> GetAllMenuItemsAsync(bool includeDeleted);
 }
