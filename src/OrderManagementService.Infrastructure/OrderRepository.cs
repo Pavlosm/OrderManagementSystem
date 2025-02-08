@@ -49,12 +49,6 @@ public class OrderRepository : IOrderRepository
         return order;
     }
 
-    public async Task<List<OrderBasic>> GetAllBasicAsync()
-    {
-        var orders = await SearchAsync();
-        return orders;
-    }
-
     public async Task<List<OrderBasic>> GetByStatusAndTypeAsync(OrderStatus? status, OrderType? orderType)
     {
         return status switch

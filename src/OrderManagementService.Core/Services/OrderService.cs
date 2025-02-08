@@ -12,15 +12,18 @@ public class OrderService : IOrderService
     private readonly IOrderRepository _orderRepository;
     private readonly IMenuItemService _menuItemService;
     private readonly IMapService _mapService;
+    private readonly IStateFactory _stateFactory;
 
     public OrderService(
         IOrderRepository orderRepository, 
         IMenuItemService menuItemService, 
-        IMapService mapService)
+        IMapService mapService,
+        IStateFactory stateFactory)
     {
         _orderRepository = orderRepository;
         _menuItemService = menuItemService;
         _mapService = mapService;
+        _stateFactory = stateFactory;
     }
 
     public async Task<ServiceResult<Order>> GetFullOrderAsync(int id)
@@ -51,10 +54,12 @@ public class OrderService : IOrderService
         }
     }
 
-    public async Task<ServiceResult<Order>> PlaceOrderAsync(OrderPlacementRequest orderPlacementRequest)
+    public async Task<ServiceResult<Order>> PlaceOrderAsync(string userId, OrderPlacementRequest orderPlacementRequest)
     {
         try
         {
+            // TODO validate contact details - skip due to time constraints
+            
             if (orderPlacementRequest.OrderType == OrderType.Delivery)
             {
                 if (orderPlacementRequest.DeliveryAddress == null)
@@ -72,13 +77,6 @@ public class OrderService : IOrderService
                         ServiceErrorCode.BadRequest,
                         "Invalid delivery address");
                 }
-            }
-            
-            if (orderPlacementRequest is { OrderType: OrderType.Pickup, DeliveryAddress: not null })
-            {
-                return ServiceResult<Order>.Fail(
-                    ServiceErrorCode.BadRequest, 
-                    "Delivery address is not required for pickup orders");
             }
             
             if (orderPlacementRequest.Items.Count == 0)
@@ -110,9 +108,11 @@ public class OrderService : IOrderService
                 Type = orderPlacementRequest.OrderType,
                 Items = [],
                 CreatedAt = DateTime.UtcNow,
-                CreatedBy = "TODO",
+                CreatedBy = userId,
                 ContactDetails = orderPlacementRequest.ContactDetails,
-                DeliveryAddress = orderPlacementRequest.DeliveryAddress,
+                DeliveryAddress = orderPlacementRequest.OrderType == OrderType.Delivery 
+                    ? orderPlacementRequest.DeliveryAddress
+                    : null,
                 SpecialInstructions = orderPlacementRequest.SpecialInstructions,
             };
             
@@ -156,7 +156,7 @@ public class OrderService : IOrderService
                 return VoidServiceResult.Fail(ServiceErrorCode.NotFound, "Order not found");
             }
         
-            var (state, error) = StateFactoryService.CreateState(order).Transition(statusId);
+            var (state, error) = _stateFactory.CreateState(order).Transition(statusId);
             if (error != null)
             {
                 return VoidServiceResult.Fail(ServiceErrorCode.BadRequest, error);
@@ -192,7 +192,7 @@ public class OrderService : IOrderService
                 return VoidServiceResult.Fail(ServiceErrorCode.NotFound, "Order not found");
             }
         
-            var (state, error) = StateFactoryService.CreateState(order).SetDeliveryStaffId(deliveryStaffId);
+            var (state, error) = _stateFactory.CreateState(order).SetDeliveryStaffId(deliveryStaffId);
             if (error != null)
             {
                 return VoidServiceResult.Fail(ServiceErrorCode.BadRequest, error);

@@ -2,12 +2,14 @@
 
 public class OutForDeliveryState : BaseState
 {
-    public OutForDeliveryState(OrderBasic orderBasic) : base(orderBasic, OrderStatus.OutForDelivery)
+    public override OrderStatus Status => OrderStatus.OutForDelivery;
+
+    public OutForDeliveryState(OrderBasic orderBasic) : base(orderBasic)
     {
         ValidateDeliveryType();
     }
     
-    public OutForDeliveryState(BaseState previous) : base(previous, OrderStatus.OutForDelivery)
+    public OutForDeliveryState(BaseState previous) : base(previous)
     {
         ValidateDeliveryType();
     }

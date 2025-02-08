@@ -71,7 +71,7 @@ public class OrderController : ControllerBase
     [HttpPost("place")]
     public async Task<IActionResult> PlaceAsync([FromBody] OrderPlacementRequest placementRequest)
     {
-        var placementResult = await _orderService.PlaceOrderAsync(placementRequest);
+        var placementResult = await _orderService.PlaceOrderAsync(DbInit.DbAdminId, placementRequest);
         
         if (placementResult.Success)
         {

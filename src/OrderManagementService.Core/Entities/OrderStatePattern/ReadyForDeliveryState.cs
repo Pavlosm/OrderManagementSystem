@@ -2,12 +2,14 @@
 
 public class ReadyForDeliveryState : BaseState
 {
-    public ReadyForDeliveryState(OrderBasic orderBasic) : base(orderBasic, OrderStatus.ReadyForDelivery)
+    public override OrderStatus Status => OrderStatus.ReadyForDelivery;
+
+    public ReadyForDeliveryState(OrderBasic orderBasic) : base(orderBasic)
     {
         ValidateOrderType();
     }
     
-    public ReadyForDeliveryState(BaseState previous) : base(previous, OrderStatus.ReadyForDelivery)
+    public ReadyForDeliveryState(BaseState previous) : base(previous)
     {
         ValidateOrderType();
     }

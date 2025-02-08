@@ -2,8 +2,7 @@
 
 public class CancelledState : BaseState
 {
-    public CancelledState(OrderBasic orderBasic) 
-        : base(orderBasic, OrderStatus.Cancelled) { }
-    public CancelledState(BaseState other) 
-        : base(other, OrderStatus.Cancelled) { }
+    public override OrderStatus Status => OrderStatus.Cancelled;
+    public CancelledState(OrderBasic orderBasic) : base(orderBasic) { }
+    public CancelledState(BaseState other) : base(other) { }
 }

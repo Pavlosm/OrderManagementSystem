@@ -2,12 +2,14 @@
 
 public class ReadyForPickupState : BaseState
 {
-    public ReadyForPickupState(OrderBasic orderBasic) : base(orderBasic, OrderStatus.ReadyForPickup)
+    public override OrderStatus Status => OrderStatus.ReadyForPickup;
+
+    public ReadyForPickupState(OrderBasic orderBasic) : base(orderBasic)
     {
         ValidateOrderType();
     }
     
-    public ReadyForPickupState(BaseState previous) : base(previous, OrderStatus.ReadyForPickup)
+    public ReadyForPickupState(BaseState previous) : base(previous)
     {
         ValidateOrderType();
     }

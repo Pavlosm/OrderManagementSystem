@@ -2,14 +2,19 @@
 
 public class DeliveredState : BaseState
 {
-    public DeliveredState(OrderBasic orderBasic) : base(orderBasic, OrderStatus.Delivered)
+    public override OrderStatus Status => OrderStatus.Delivered;
+
+    public DeliveredState(OrderBasic orderBasic) : base(orderBasic)
     {
         ValidateDeliveryType();
     }
     
-    public DeliveredState(BaseState previous) : base(previous, OrderStatus.Delivered)
+    public DeliveredState(BaseState previous) : base(previous)
     {
         ValidateDeliveryType();
+        FulfilmentTimeMinutes = UpdatedAt.HasValue 
+            ? (int)UpdatedAt.Value.Subtract(CreatedAt).TotalMinutes 
+            : (int)DateTime.UtcNow.Subtract(CreatedAt).TotalMinutes;
     }
 
     private void ValidateDeliveryType()

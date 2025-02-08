@@ -2,13 +2,13 @@
 
 public enum OrderStatus
 {
-    Pending,
-    Preparing,
-    ReadyForPickup,
-    ReadyForDelivery,
-    OutForDelivery,
-    Delivered,
-    Cancelled,
-    UnableToDeliver,
-    PickedUp
+    Pending, // both
+    Preparing, // both
+    ReadyForPickup, // Pickup
+    ReadyForDelivery, // Delivery
+    OutForDelivery, // Delivery
+    Delivered, // Pickup
+    Cancelled, // both
+    UnableToDeliver, // Delivery
+    PickedUp // Pickup
 }

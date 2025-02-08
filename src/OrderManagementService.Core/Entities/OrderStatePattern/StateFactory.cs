@@ -1,8 +1,8 @@
 ﻿namespace OrderManagementService.Core.Entities.OrderStatePattern;
 
-public class StateFactoryService
+public class StateFactory : IStateFactory
 {
-    public static IOrderState CreateState(OrderBasic orderBasic)
+    public IOrderState CreateState(OrderBasic orderBasic)
     {
         return orderBasic.Status switch
         {
@@ -15,8 +15,7 @@ public class StateFactoryService
             OrderStatus.Cancelled => new CancelledState(orderBasic),
             OrderStatus.UnableToDeliver => new UnableToDeliverState(orderBasic),
             OrderStatus.PickedUp => new PickedUpState(orderBasic),
-            _ => throw new ArgumentOutOfRangeException()
+            _ => throw new ArgumentOutOfRangeException(nameof(orderBasic.Status), orderBasic.Status, "Invalid order status.")
         };
     }
-    
 }

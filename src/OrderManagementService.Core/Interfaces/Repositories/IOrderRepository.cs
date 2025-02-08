@@ -7,7 +7,6 @@ public interface IOrderRepository
 {
     Task<Order?> GetByIdAsync(int id);
     Task<OrderBasic?> GetBasicByIdAsync(int id);
-    Task<List<OrderBasic>> GetAllBasicAsync();
     Task<List<OrderBasic>> GetByStatusAndTypeAsync(OrderStatus? status, OrderType? type);
     Task<int> CreateAsync(Order order);
     

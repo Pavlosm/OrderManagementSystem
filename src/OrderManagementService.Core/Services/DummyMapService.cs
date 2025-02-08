@@ -1,8 +1,6 @@
-﻿using System.Threading.Tasks;
-using OrderManagementService.Core.Entities;
+﻿using OrderManagementService.Core.Entities;
 using OrderManagementService.Core.Interfaces;
 using OrderManagementService.Core.Interfaces.Services;
-using OrderManagementService.Core.Models;
 
 namespace OrderManagementService.Core.Services;
 

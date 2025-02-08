@@ -2,14 +2,19 @@
 
 public class PickedUpState : BaseState
 {
-    public PickedUpState(OrderBasic orderBasic) : base(orderBasic, OrderStatus.UnableToDeliver)
+    public override OrderStatus Status => OrderStatus.PickedUp;
+
+    public PickedUpState(OrderBasic orderBasic) : base(orderBasic)
     {
         ValidateOrderType();
     }
     
-    public PickedUpState(BaseState previous) : base(previous, OrderStatus.UnableToDeliver)
+    public PickedUpState(BaseState previous) : base(previous)
     {
         ValidateOrderType();
+        FulfilmentTimeMinutes = UpdatedAt.HasValue 
+            ? (int)UpdatedAt.Value.Subtract(CreatedAt).TotalMinutes 
+            : (int)DateTime.UtcNow.Subtract(CreatedAt).TotalMinutes;
     }
 
     private void ValidateOrderType()

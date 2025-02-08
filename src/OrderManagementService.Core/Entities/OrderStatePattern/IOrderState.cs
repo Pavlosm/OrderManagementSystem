@@ -6,7 +6,6 @@ public interface IOrderState
     public int? FulfilmentTimeMinutes { get; }
     public DateTime? UpdatedAt { get; }
     public OrderStatus Status { get; }
-    
     public (IOrderState newState, string? error) Transition(OrderStatus newStatus);
     public (IOrderState newState, string? error) SetDeliveryStaffId(string deliveryStaffId);
 }

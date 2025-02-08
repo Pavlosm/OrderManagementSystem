@@ -2,8 +2,8 @@
 
 public class PendingState : BaseState
 {
-    public PendingState(OrderBasic orderBasic) : base(orderBasic, OrderStatus.Pending) { }
-    public PendingState(BaseState previous) : base(previous, OrderStatus.Pending) { }
+    public override OrderStatus Status => OrderStatus.Pending;
+    public PendingState(OrderBasic orderBasic) : base(orderBasic) { }
     
     public override (IOrderState newState, string? error) Transition(OrderStatus newStatus)
     {
