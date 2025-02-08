@@ -1,6 +1,7 @@
 ﻿using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
 using OrderManagementService.Core.Entities;
+using OrderManagementService.Core.Entities.OrderStatePattern;
 using OrderManagementService.Core.Interfaces.Repositories;
 
 namespace OrderManagementService.Infrastructure;
@@ -91,19 +92,17 @@ public class OrderRepository : IOrderRepository
 
     public async Task<long> UpdateStatusAsync(
         int orderId, 
-        OrderStatus status,
-        int? fulfillmentTimeMinutes,
-        DateTime updatedAt, 
+        IOrderState state, 
         string updatedBy,
         byte[] rowVersion)
     {
         var order = new Order
         {
             Id = orderId, 
-            Status = status, 
-            LastUpdatedAt = updatedAt, 
+            Status = state.Status, 
+            LastUpdatedAt = state.UpdatedAt, 
             LastUpdatedBy = updatedBy,
-            FulfillmentTimeMinutes = fulfillmentTimeMinutes,
+            FulfillmentTimeMinutes = state.FulfilmentTimeMinutes,
             RowVersion = rowVersion
         };
         
@@ -119,16 +118,15 @@ public class OrderRepository : IOrderRepository
 
     public async Task<long> SetDeliveryStaffAsync(
         int orderId,
-        string deliveryStuffId, 
-        DateTime updatedAt, 
+        IOrderState state, 
         string updatedBy,
         byte[] rowVersion)
     {
         var order = new Order
         {
             Id = orderId, 
-            DeliveryStaffId = deliveryStuffId, 
-            LastUpdatedAt = updatedAt, 
+            DeliveryStaffId = state.DeliveryStaffId, 
+            LastUpdatedAt = state.UpdatedAt, 
             LastUpdatedBy = updatedBy,
             RowVersion = rowVersion
         };

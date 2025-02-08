@@ -1,4 +1,5 @@
 using OrderManagementService.Core.Entities;
+using OrderManagementService.Core.Entities.OrderStatePattern;
 using OrderManagementService.Core.Interfaces;
 using OrderManagementService.Core.Interfaces.Repositories;
 using OrderManagementService.Core.Interfaces.Services;
@@ -12,7 +13,10 @@ public class OrderService : IOrderService
     private readonly IMenuItemService _menuItemService;
     private readonly IMapService _mapService;
 
-    public OrderService(IOrderRepository orderRepository, IMenuItemService menuItemService, IMapService mapService)
+    public OrderService(
+        IOrderRepository orderRepository, 
+        IMenuItemService menuItemService, 
+        IMapService mapService)
     {
         _orderRepository = orderRepository;
         _menuItemService = menuItemService;
@@ -152,25 +156,13 @@ public class OrderService : IOrderService
                 return VoidServiceResult.Fail(ServiceErrorCode.NotFound, "Order not found");
             }
         
-            var (orderState, error) = OrderState.Create(order);
-            if (orderState == null)
+            var (state, error) = StateFactoryService.CreateState(order).Transition(statusId);
+            if (error != null)
             {
                 return VoidServiceResult.Fail(ServiceErrorCode.BadRequest, error);
             }
 
-            var (success, err) = orderState.ChangeStatus(statusId);
-            if (!success)
-            {
-                return VoidServiceResult.Fail(ServiceErrorCode.BadRequest, err ?? "Unknown error");
-            }
-        
-            var updatedCount = await _orderRepository.UpdateStatusAsync(
-                orderId, 
-                orderState.Status, 
-                orderState.FulfillmentTimeMinutes,
-                orderState.UpdatedAt ?? DateTime.UtcNow, 
-                userId,
-                order.RowVersion);
+            var updatedCount = await _orderRepository.UpdateStatusAsync(orderId, state, userId, order.RowVersion);
             
             if (updatedCount > 0)
             {
@@ -200,24 +192,13 @@ public class OrderService : IOrderService
                 return VoidServiceResult.Fail(ServiceErrorCode.NotFound, "Order not found");
             }
         
-            var (orderState, error) = OrderState.Create(order);
-            if (orderState == null)
+            var (state, error) = StateFactoryService.CreateState(order).SetDeliveryStaffId(deliveryStaffId);
+            if (error != null)
             {
                 return VoidServiceResult.Fail(ServiceErrorCode.BadRequest, error);
             }
 
-            var (success, err) = orderState.SetDeliveryStaffId(deliveryStaffId);
-            if (!success)
-            {
-                return VoidServiceResult.Fail(ServiceErrorCode.BadRequest, err ?? "Unknown error");
-            }
-        
-            var updatedCount = await _orderRepository.SetDeliveryStaffAsync(
-                orderId, 
-                orderState.DeliveryStaffId ?? string.Empty, 
-                orderState.UpdatedAt ?? DateTime.UtcNow,
-                userId,
-                order.RowVersion);
+            var updatedCount = await _orderRepository.SetDeliveryStaffAsync(orderId, state, userId, order.RowVersion);
             
             if (updatedCount > 0)
             {

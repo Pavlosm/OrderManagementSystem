@@ -107,17 +107,19 @@ public class OrderController : ControllerBase
             return NoContent();
         }
 
-        if (updateResult.Error!.Value.Code == ServiceErrorCode.NotFound)
+        switch (updateResult.Error!.Value.Code)
         {
-            return NotFound();
+            case ServiceErrorCode.NotFound:
+                return NotFound();
+            case ServiceErrorCode.BadRequest:
+                return BadRequest(updateResult.Error.Value.Message);
+            default:
+                _logger.LogError(
+                    updateResult.Error.Value.Exception,
+                    "An error occurred while trying to update order status: {message}", 
+                    updateResult.Error.Value.Message);
+                return StatusCode(500, "An error occurred while trying to update order status");
         }
-        
-        _logger.LogError(
-            updateResult.Error.Value.Exception,
-            "An error occurred while trying to update order status: {message}", 
-            updateResult.Error.Value.Message);
-        
-        return StatusCode(500, "An error occurred while trying to update order status");
     }
     
     [HttpPatch("{id:int}/delivery")]
@@ -135,16 +137,18 @@ public class OrderController : ControllerBase
             return NoContent();
         }
 
-        if (updateResult.Error!.Value.Code == ServiceErrorCode.NotFound)
+        switch (updateResult.Error!.Value.Code)
         {
-            return NotFound();
+            case ServiceErrorCode.NotFound:
+                return NotFound();
+            case ServiceErrorCode.BadRequest:
+                return BadRequest(updateResult.Error.Value.Message);
+            default:
+                _logger.LogError(
+                    updateResult.Error.Value.Exception,
+                    "An error occurred while trying to update order delivery status: {message}", 
+                    updateResult.Error.Value.Message);
+                return StatusCode(500, "An error occurred while trying to update order delivery status");
         }
-        
-        _logger.LogError(
-            updateResult.Error.Value.Exception,
-            "An error occurred while trying to update order delivery status: {message}", 
-            updateResult.Error.Value.Message);
-        
-        return StatusCode(500, "An error occurred while trying to update order delivery status");
     }
 }

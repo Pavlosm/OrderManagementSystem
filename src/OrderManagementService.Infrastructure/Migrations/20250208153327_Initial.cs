@@ -389,6 +389,8 @@ namespace OrderManagementService.Infrastructure.Migrations
                 name: "IX_Orders_Type",
                 table: "Orders",
                 column: "Type");
+            
+            DbInit.Seed(migrationBuilder);
         }
 
         /// <inheritdoc />

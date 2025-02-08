@@ -1,4 +1,5 @@
 using OrderManagementService.Core.Entities;
+using OrderManagementService.Core.Entities.OrderStatePattern;
 
 namespace OrderManagementService.Core.Interfaces.Repositories;
 
@@ -12,16 +13,13 @@ public interface IOrderRepository
     
     Task<long> UpdateStatusAsync(
         int orderId, 
-        OrderStatus status,
-        int? fulfillmentTimeMinutes,
-        DateTime updatedAt, 
+        IOrderState state,
         string updatedBy,
         byte[] rowVersion);
     
     Task<long> SetDeliveryStaffAsync(
         int orderId, 
-        string deliveryStuffId, 
-        DateTime updatedAt,
+        IOrderState state,
         string updatedBy,
         byte[] orderStateRowVersion);
 } 
