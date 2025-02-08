@@ -11,7 +11,11 @@ public class ApplicationDbContext(DbContextOptions options) : IdentityDbContext<
     public DbSet<OrderItem> OrderItems { get; set; }
     
     public DbSet<Category> Categories { get; set; }
-
+    
+    public DbSet<OrderContactDetails> OrderContactDetails { get; set; }
+    
+    public DbSet<OrderDeliveryAddress> OrderDeliveryAddresses { get; set; }
+    
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder
@@ -36,8 +40,28 @@ public class ApplicationDbContext(DbContextOptions options) : IdentityDbContext<
         
         modelBuilder
             .Entity<Order>()
+            .HasIndex(i => i.Status);
+        
+        modelBuilder
+            .Entity<Order>()
             .Property(order => order.Type)
             .HasColumnType("tinyint");
+        
+        modelBuilder
+            .Entity<Order>()
+            .HasIndex(i => i.Type);
+        
+        modelBuilder
+            .Entity<Order>()
+            .HasOne<OrderDeliveryAddress>()
+            .WithOne()
+            .HasForeignKey<OrderDeliveryAddress>(a => a.OrderId);
+        
+        modelBuilder
+            .Entity<Order>()
+            .HasOne<OrderContactDetails>()
+            .WithOne()
+            .HasForeignKey<OrderContactDetails>(a => a.OrderId);
         
         modelBuilder
             .Entity<Order>()

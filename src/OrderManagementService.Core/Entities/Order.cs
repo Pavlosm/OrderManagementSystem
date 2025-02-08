@@ -31,6 +31,11 @@ public class OrderBasic : AuditInfo
     /// Gets or sets the unique identifier of the assigned delivery staff, if any.
     /// </summary>
     public string? DeliveryStaffId { get; set; }
+    
+    /// <summary>
+    /// Fulfillment time in minutes.
+    /// </summary>
+    public int FulfillmentTimeMinutes { get; set; }
 }
 
 /// <summary>

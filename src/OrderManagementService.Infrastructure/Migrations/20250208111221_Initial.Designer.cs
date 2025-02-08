@@ -12,7 +12,7 @@ using OrderManagementService.Infrastructure;
 namespace OrderManagementService.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250208105424_Initial")]
+    [Migration("20250208111221_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
@@ -320,6 +320,9 @@ namespace OrderManagementService.Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<int>("ContactDetailsOrderId")
+                        .HasColumnType("int");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
@@ -327,8 +330,14 @@ namespace OrderManagementService.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int>("DeliveryAddressOrderId")
+                        .HasColumnType("int");
+
                     b.Property<string>("DeliveryStaffId")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("FulfillmentTimeMinutes")
+                        .HasColumnType("int");
 
                     b.Property<DateTime?>("LastUpdatedAt")
                         .HasColumnType("datetime2");
@@ -356,6 +365,14 @@ namespace OrderManagementService.Infrastructure.Migrations
                         .HasColumnType("tinyint");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("ContactDetailsOrderId");
+
+                    b.HasIndex("DeliveryAddressOrderId");
+
+                    b.HasIndex("Status");
+
+                    b.HasIndex("Type");
 
                     b.ToTable("Orders");
                 });
@@ -410,7 +427,7 @@ namespace OrderManagementService.Infrastructure.Migrations
 
                     b.HasKey("OrderId");
 
-                    b.ToTable("OrderDeliveryAddress");
+                    b.ToTable("OrderDeliveryAddresses");
                 });
 
             modelBuilder.Entity("OrderManagementService.Core.Entities.OrderItem", b =>
@@ -511,21 +528,38 @@ namespace OrderManagementService.Infrastructure.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("OrderManagementService.Core.Entities.Order", b =>
+                {
+                    b.HasOne("OrderManagementService.Core.Entities.OrderContactDetails", "ContactDetails")
+                        .WithMany()
+                        .HasForeignKey("ContactDetailsOrderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("OrderManagementService.Core.Entities.OrderDeliveryAddress", "DeliveryAddress")
+                        .WithMany()
+                        .HasForeignKey("DeliveryAddressOrderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ContactDetails");
+
+                    b.Navigation("DeliveryAddress");
+                });
+
             modelBuilder.Entity("OrderManagementService.Core.Entities.OrderContactDetails", b =>
                 {
                     b.HasOne("OrderManagementService.Core.Entities.Order", null)
-                        .WithOne("ContactDetails")
+                        .WithOne()
                         .HasForeignKey("OrderManagementService.Core.Entities.OrderContactDetails", "OrderId")
-                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 
             modelBuilder.Entity("OrderManagementService.Core.Entities.OrderDeliveryAddress", b =>
                 {
                     b.HasOne("OrderManagementService.Core.Entities.Order", null)
-                        .WithOne("DeliveryAddress")
+                        .WithOne()
                         .HasForeignKey("OrderManagementService.Core.Entities.OrderDeliveryAddress", "OrderId")
-                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 
@@ -546,12 +580,6 @@ namespace OrderManagementService.Infrastructure.Migrations
 
             modelBuilder.Entity("OrderManagementService.Core.Entities.Order", b =>
                 {
-                    b.Navigation("ContactDetails")
-                        .IsRequired();
-
-                    b.Navigation("DeliveryAddress")
-                        .IsRequired();
-
                     b.Navigation("Items");
                 });
 #pragma warning restore 612, 618

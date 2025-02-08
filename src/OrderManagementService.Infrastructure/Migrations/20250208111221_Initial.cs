@@ -88,28 +88,6 @@ namespace OrderManagementService.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Orders",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    SpecialInstructions = table.Column<string>(type: "nvarchar(2000)", maxLength: 2000, nullable: true),
-                    TotalAmount = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
-                    RowVersion = table.Column<byte[]>(type: "rowversion", rowVersion: true, nullable: false),
-                    CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    LastUpdatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    LastUpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    Status = table.Column<byte>(type: "tinyint", nullable: false),
-                    Type = table.Column<byte>(type: "tinyint", nullable: false),
-                    DeliveryStaffId = table.Column<string>(type: "nvarchar(max)", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Orders", x => x.Id);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "AspNetRoleClaims",
                 columns: table => new
                 {
@@ -250,16 +228,10 @@ namespace OrderManagementService.Infrastructure.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_OrderContactDetails", x => x.OrderId);
-                    table.ForeignKey(
-                        name: "FK_OrderContactDetails_Orders_OrderId",
-                        column: x => x.OrderId,
-                        principalTable: "Orders",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
-                name: "OrderDeliveryAddress",
+                name: "OrderDeliveryAddresses",
                 columns: table => new
                 {
                     OrderId = table.Column<int>(type: "int", nullable: false),
@@ -271,12 +243,43 @@ namespace OrderManagementService.Infrastructure.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_OrderDeliveryAddress", x => x.OrderId);
+                    table.PrimaryKey("PK_OrderDeliveryAddresses", x => x.OrderId);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Orders",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    SpecialInstructions = table.Column<string>(type: "nvarchar(2000)", maxLength: 2000, nullable: true),
+                    TotalAmount = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    ContactDetailsOrderId = table.Column<int>(type: "int", nullable: false),
+                    DeliveryAddressOrderId = table.Column<int>(type: "int", nullable: false),
+                    RowVersion = table.Column<byte[]>(type: "rowversion", rowVersion: true, nullable: false),
+                    CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    LastUpdatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    LastUpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    Status = table.Column<byte>(type: "tinyint", nullable: false),
+                    Type = table.Column<byte>(type: "tinyint", nullable: false),
+                    DeliveryStaffId = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    FulfillmentTimeMinutes = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Orders", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_OrderDeliveryAddress_Orders_OrderId",
-                        column: x => x.OrderId,
-                        principalTable: "Orders",
-                        principalColumn: "Id",
+                        name: "FK_Orders_OrderContactDetails_ContactDetailsOrderId",
+                        column: x => x.ContactDetailsOrderId,
+                        principalTable: "OrderContactDetails",
+                        principalColumn: "OrderId",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Orders_OrderDeliveryAddresses_DeliveryAddressOrderId",
+                        column: x => x.DeliveryAddressOrderId,
+                        principalTable: "OrderDeliveryAddresses",
+                        principalColumn: "OrderId",
                         onDelete: ReferentialAction.Cascade);
                 });
 
@@ -362,6 +365,40 @@ namespace OrderManagementService.Infrastructure.Migrations
                 name: "IX_OrderItems_OrderId",
                 table: "OrderItems",
                 column: "OrderId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Orders_ContactDetailsOrderId",
+                table: "Orders",
+                column: "ContactDetailsOrderId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Orders_DeliveryAddressOrderId",
+                table: "Orders",
+                column: "DeliveryAddressOrderId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Orders_Status",
+                table: "Orders",
+                column: "Status");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Orders_Type",
+                table: "Orders",
+                column: "Type");
+
+            migrationBuilder.AddForeignKey(
+                name: "FK_OrderContactDetails_Orders_OrderId",
+                table: "OrderContactDetails",
+                column: "OrderId",
+                principalTable: "Orders",
+                principalColumn: "Id");
+
+            migrationBuilder.AddForeignKey(
+                name: "FK_OrderDeliveryAddresses_Orders_OrderId",
+                table: "OrderDeliveryAddresses",
+                column: "OrderId",
+                principalTable: "Orders",
+                principalColumn: "Id");
             
             DbInit.Seed(migrationBuilder);
         }
@@ -369,6 +406,14 @@ namespace OrderManagementService.Infrastructure.Migrations
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.DropForeignKey(
+                name: "FK_OrderContactDetails_Orders_OrderId",
+                table: "OrderContactDetails");
+
+            migrationBuilder.DropForeignKey(
+                name: "FK_OrderDeliveryAddresses_Orders_OrderId",
+                table: "OrderDeliveryAddresses");
+
             migrationBuilder.DropTable(
                 name: "AspNetRoleClaims");
 
@@ -388,12 +433,6 @@ namespace OrderManagementService.Infrastructure.Migrations
                 name: "CategoryMenuItem");
 
             migrationBuilder.DropTable(
-                name: "OrderContactDetails");
-
-            migrationBuilder.DropTable(
-                name: "OrderDeliveryAddress");
-
-            migrationBuilder.DropTable(
                 name: "OrderItems");
 
             migrationBuilder.DropTable(
@@ -410,6 +449,12 @@ namespace OrderManagementService.Infrastructure.Migrations
 
             migrationBuilder.DropTable(
                 name: "Orders");
+
+            migrationBuilder.DropTable(
+                name: "OrderContactDetails");
+
+            migrationBuilder.DropTable(
+                name: "OrderDeliveryAddresses");
         }
     }
 }
