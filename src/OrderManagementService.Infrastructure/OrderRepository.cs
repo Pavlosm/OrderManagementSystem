@@ -12,7 +12,7 @@ public class OrderRepository : IOrderRepository
         _context = context;
     }
 
-    public Task<Order?> GetByIdAsync(Guid id)
+    public Task<Order?> GetByIdAsync(int id)
     {
         throw new NotImplementedException();
     }
@@ -42,12 +42,17 @@ public class OrderRepository : IOrderRepository
         return order.Id;
     }
 
-    public Task UpdateAsync(Order order)
+    public Task DeleteAsync(Guid id)
     {
         throw new NotImplementedException();
     }
 
-    public Task DeleteAsync(Guid id)
+    public Task UpdateStatusAsync(int orderId, OrderStatus status, DateTime updatedAt, Guid updatedBy)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task UpdateStatusAsync(int orderId, Guid deliveryStuffId, DateTime updatedAt, Guid updatedBy)
     {
         throw new NotImplementedException();
     }

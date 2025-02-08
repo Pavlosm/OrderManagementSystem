@@ -30,7 +30,7 @@ public class OrderBasic : AuditInfo
     /// <summary>
     /// Gets or sets the unique identifier of the assigned delivery staff, if any.
     /// </summary>
-    public Guid? DeliveryStaffId { get; set; }
+    public string? DeliveryStaffId { get; set; }
 }
 
 /// <summary>

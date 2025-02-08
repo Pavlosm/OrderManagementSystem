@@ -102,7 +102,7 @@ namespace OrderManagementService.Infrastructure.Migrations
                     LastUpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
                     Status = table.Column<byte>(type: "tinyint", nullable: false),
                     Type = table.Column<byte>(type: "tinyint", nullable: false),
-                    DeliveryStaffId = table.Column<Guid>(type: "uniqueidentifier", nullable: true)
+                    DeliveryStaffId = table.Column<string>(type: "nvarchar(max)", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -362,6 +362,8 @@ namespace OrderManagementService.Infrastructure.Migrations
                 name: "IX_OrderItems_OrderId",
                 table: "OrderItems",
                 column: "OrderId");
+            
+            DbInit.Seed(migrationBuilder);
         }
 
         /// <inheritdoc />

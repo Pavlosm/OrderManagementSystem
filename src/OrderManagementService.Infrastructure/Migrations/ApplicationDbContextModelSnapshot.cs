@@ -324,8 +324,8 @@ namespace OrderManagementService.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<Guid?>("DeliveryStaffId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<string>("DeliveryStaffId")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime?>("LastUpdatedAt")
                         .HasColumnType("datetime2");
