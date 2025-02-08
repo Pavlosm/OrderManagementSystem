@@ -1,6 +1,0 @@
-﻿services:
-  ordermanagementservice:
-    image: ordermanagementservice
-    build:
-      context: .
-      dockerfile: OrderManagementService/Dockerfile
