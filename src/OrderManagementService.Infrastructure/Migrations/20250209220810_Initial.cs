@@ -102,7 +102,6 @@ namespace OrderManagementService.Infrastructure.Migrations
                     Status = table.Column<byte>(type: "tinyint", nullable: false),
                     Type = table.Column<byte>(type: "tinyint", nullable: false),
                     DeliveryStaffId = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    FulfillmentTimeMinutes = table.Column<int>(type: "int", nullable: true),
                     RowVersion = table.Column<byte[]>(type: "rowversion", rowVersion: true, nullable: false)
                 },
                 constraints: table =>
@@ -286,6 +285,28 @@ namespace OrderManagementService.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "OrderDomainEvents",
+                columns: table => new
+                {
+                    Id = table.Column<long>(type: "bigint", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Type = table.Column<int>(type: "int", nullable: false),
+                    OrderId = table.Column<int>(type: "int", nullable: false),
+                    Message = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_OrderDomainEvents", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_OrderDomainEvents_Orders_OrderId",
+                        column: x => x.OrderId,
+                        principalTable: "Orders",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "OrderItems",
                 columns: table => new
                 {
@@ -371,6 +392,11 @@ namespace OrderManagementService.Infrastructure.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
+                name: "IX_OrderDomainEvents_OrderId",
+                table: "OrderDomainEvents",
+                column: "OrderId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_OrderItems_MenuItemId",
                 table: "OrderItems",
                 column: "MenuItemId");
@@ -399,6 +425,7 @@ namespace OrderManagementService.Infrastructure.Migrations
             migrationBuilder.DropTable(
                 name: "AspNetRoleClaims");
 
+            
             migrationBuilder.DropTable(
                 name: "AspNetUserClaims");
 
@@ -419,6 +446,9 @@ namespace OrderManagementService.Infrastructure.Migrations
 
             migrationBuilder.DropTable(
                 name: "OrderDeliveryAddresses");
+
+            migrationBuilder.DropTable(
+                name: "OrderDomainEvents");
 
             migrationBuilder.DropTable(
                 name: "OrderItems");

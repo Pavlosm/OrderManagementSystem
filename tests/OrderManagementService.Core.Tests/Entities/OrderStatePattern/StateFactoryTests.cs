@@ -22,7 +22,6 @@ public class StateFactoryTests
         Assert.Equal(order.Status, state.Status);
         Assert.Equal(order.DeliveryStaffId, state.DeliveryStaffId);
         Assert.Equal(order.LastUpdatedAt, state.UpdatedAt);
-        Assert.Equal(order.FulfillmentTimeMinutes, state.FulfilmentTimeMinutes);
     }
     
     [Theory]
@@ -50,7 +49,6 @@ public class StateFactoryTests
         Assert.Equal(order.Status, state.Status);
         Assert.Equal(order.DeliveryStaffId, state.DeliveryStaffId);
         Assert.Equal(order.LastUpdatedAt, state.UpdatedAt);
-        Assert.Equal(order.FulfillmentTimeMinutes, state.FulfilmentTimeMinutes);
     }
     
     [Theory]

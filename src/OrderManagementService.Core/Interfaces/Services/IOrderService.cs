@@ -7,7 +7,10 @@ public interface IOrderService
 {
     Task<ServiceResult<Order>> GetFullOrderAsync(int id);
     Task<ServiceResult<List<OrderBasic>>> FilterOrdersAsync(OrderStatus? status, OrderType? type);
+    Task<ServiceResult<List<OrderBasic>>> FindOrdersForDeliveryAsync(string userId);
     Task<ServiceResult<Order>> PlaceOrderAsync(string userId, OrderPlacementRequest orderPlacementRequest);
     Task<VoidServiceResult> UpdateStatusAsync(string userId, int orderId, OrderStatus statusId);
     Task<VoidServiceResult> SetDeliveryStatus(string userId, int orderId, string deliveryStaffId);
+    Task<VoidServiceResult> PublishUnPublishedDomainEventsAsync();
+    Task<ServiceResult<Statistics>> GetStatisticsPerDayAsync();
 }

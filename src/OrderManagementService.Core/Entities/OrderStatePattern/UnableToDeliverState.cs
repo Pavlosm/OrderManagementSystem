@@ -12,9 +12,6 @@ public class UnableToDeliverState : BaseState
     public UnableToDeliverState(BaseState previous) : base(previous)
     {
         ValidateDeliveryType();
-        FulfilmentTimeMinutes = UpdatedAt.HasValue 
-            ? (int)UpdatedAt.Value.Subtract(CreatedAt).TotalMinutes 
-            : (int)DateTime.UtcNow.Subtract(CreatedAt).TotalMinutes;
     }
     
     private void ValidateDeliveryType()

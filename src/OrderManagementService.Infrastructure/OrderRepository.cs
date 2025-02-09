@@ -36,7 +36,6 @@ public class OrderRepository : IOrderRepository
         LastUpdatedAt = o.LastUpdatedAt,
         LastUpdatedBy = o.LastUpdatedBy,
         DeliveryStaffId = o.DeliveryStaffId,
-        FulfillmentTimeMinutes = o.FulfillmentTimeMinutes,
         RowVersion = o.RowVersion
     };
 
@@ -88,7 +87,8 @@ public class OrderRepository : IOrderRepository
         int orderId, 
         IOrderState state, 
         string updatedBy,
-        byte[] rowVersion)
+        byte[] rowVersion,
+        OrderDomainEventOutbox eventOutbox)
     {
         var order = new Order
         {
@@ -96,7 +96,6 @@ public class OrderRepository : IOrderRepository
             Status = state.Status, 
             LastUpdatedAt = state.UpdatedAt, 
             LastUpdatedBy = updatedBy,
-            FulfillmentTimeMinutes = state.FulfilmentTimeMinutes,
             RowVersion = rowVersion
         };
         
@@ -104,7 +103,7 @@ public class OrderRepository : IOrderRepository
         _context.Entry(order).Property(o => o.Status).IsModified = true;
         _context.Entry(order).Property(o => o.LastUpdatedAt).IsModified = true;
         _context.Entry(order).Property(o => o.LastUpdatedBy).IsModified = true;
-        
+        _context.OrderDomainEvents.Add(eventOutbox);
         var modifiedCount = await _context.SaveChangesAsync();
         
         return modifiedCount;
@@ -114,7 +113,8 @@ public class OrderRepository : IOrderRepository
         int orderId,
         IOrderState state, 
         string updatedBy,
-        byte[] rowVersion)
+        byte[] rowVersion,
+        OrderDomainEventOutbox eventOutbox)
     {
         var order = new Order
         {
@@ -129,9 +129,70 @@ public class OrderRepository : IOrderRepository
         _context.Entry(order).Property(o => o.DeliveryStaffId).IsModified = true;
         _context.Entry(order).Property(o => o.LastUpdatedAt).IsModified = true;
         _context.Entry(order).Property(o => o.LastUpdatedBy).IsModified = true;
-        
+        _context.OrderDomainEvents.Add(eventOutbox);
         var modifiedCount = await _context.SaveChangesAsync();
         
         return modifiedCount;
+    }
+
+    public async Task<List<OrderDomainEventOutbox>> GetOrderDomainEventOutboxAsync()
+    {
+        return await _context.OrderDomainEvents.ToListAsync();
+    }
+
+    public async Task DeleteDomainEventAsync(OrderDomainEventOutbox message)
+    {
+        _context.OrderDomainEvents.Remove(message);
+        await _context.SaveChangesAsync();
+    }
+
+    public async Task<List<OrderBasic>> FindOrdersForDeliveryAsync(string userId)
+    {
+        return await _context.Orders
+            .Where(o => o.Status == OrderStatus.ReadyForDelivery && o.DeliveryStaffId == userId)
+            .Select(MapToBasicExpr)
+            .ToListAsync();
+    }
+    
+    public async Task<Statistics> GetStatisticsPerDayAsync()
+    {
+        var orderStats = await _context.Database.SqlQuery<OrderStatistics>(
+            @$"SELECT
+                  max(CreatedAt) as SessionStart,
+                  count(1) as CompletedOrdersCount,
+                  AVG(DATEDIFF(MINUTE, LastUpdatedAt, CreatedAt)) AS AvgTimeToCompletionMin
+               FROM [dbo].[Orders]
+               WHERE [dbo].[Orders].[Status] = 5
+               GROUP BY
+                  datepart(year, CreatedAt),
+                  datepart(month, CreatedAt),
+                  datepart(week, CreatedAt),
+                  datepart(day, CreatedAt)").ToListAsync();
+        
+        var menuItemStatistics = await _context.Database.SqlQuery<MenuItemStatistics>(
+            @$"SELECT 
+	            max(o.CreatedAt) as SessionStart,
+	            m.Name AS ItemName,
+	            COUNT(1) AS UnitsSold
+            FROM [dbo].[Orders] AS o
+            INNER JOIN [dbo].[OrderItems] AS i ON o.Id = i.OrderId
+            INNER JOIN [dbo].MenuItem AS m ON i.MenuItemId = m.Id
+            WHERE o.Status = 5  
+            GROUP BY 
+	            datepart(year, o.CreatedAt),
+	            datepart(month, o.CreatedAt),
+	            datepart(week, o.CreatedAt),
+	            datepart(day, o.CreatedAt),
+	            i.MenuItemId,
+	            m.Name
+            ").ToListAsync();
+
+        
+        
+        return new Statistics
+        {
+            OrderStatistics = orderStats,
+            MenuItemStatistics = menuItemStatistics
+        };
     }
 }

@@ -1,15 +1,15 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using OrderManagementService.Core.Entities;
 using OrderManagementService.Core.Interfaces;
 using OrderManagementService.Core.Interfaces.Services;
 using OrderManagementService.Core.Models;
-using OrderManagementService.Infrastructure;
 
 namespace OrderManagementService.WebApi.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-[AllowAnonymous]
 public class MenuItemController : ControllerBase
 {
     private readonly ILogger<MenuItemController> _logger;
@@ -38,7 +38,7 @@ public class MenuItemController : ControllerBase
         
         const string msg = "An error occurred while trying to get menu item";
         _logger.LogError(
-            itemResult.Error.Value.Exception, 
+            itemResult.Error!.Value.Exception, 
             $"{msg} {itemResult.Error.Value.Message}");
         
         return StatusCode(500, msg);
@@ -54,7 +54,7 @@ public class MenuItemController : ControllerBase
             return Ok(itemResult.Data);
         }
         
-        if (itemResult.Error.Value.Code == ServiceErrorCode.NotFound)
+        if (itemResult.Error!.Value.Code == ServiceErrorCode.NotFound)
         {
             return NotFound(itemResult.Error.Value.Message);
         }
@@ -69,15 +69,21 @@ public class MenuItemController : ControllerBase
     }
     
     [HttpPost("")]
+    [Authorize(Roles = Role.Admin)]
     public async Task<IActionResult> CreateAsync([FromBody] MenuItemRequestData data)
     {
-        var createResult = await _menuItemService.CreateAsync(DbInit.DbAdminId, data);
+        var userId = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
+        if (userId == null)
+        {
+            return Unauthorized("Could not find user id in claims");
+        }
+        var createResult = await _menuItemService.CreateAsync(userId.Value, data);
         if (createResult.Success)
         {
             return Ok(createResult.Data);
         }
         
-        if (createResult.Error.Value.Code == ServiceErrorCode.BadRequest)
+        if (createResult.Error!.Value.Code == ServiceErrorCode.BadRequest)
         {
             return BadRequest(createResult.Error.Value.Message);
         }
@@ -92,15 +98,22 @@ public class MenuItemController : ControllerBase
     }
     
     [HttpPost("{id:int}")]
+    [Authorize(Roles = Role.Admin)]
     public async Task<IActionResult> CreateAsync(int id, [FromBody] MenuItemRequestData data)
     {
-        var createResult = await _menuItemService.UpdateAsync(DbInit.DbAdminId, id, data);
+        var userId = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
+        if (userId == null)
+        {
+            return Unauthorized("Could not find user id in claims");
+        }
+        
+        var createResult = await _menuItemService.UpdateAsync(userId.Value, id, data);
         if (createResult.Success)
         {
             return Ok(createResult.Data);
         }
         
-        switch (createResult.Error.Value.Code)
+        switch (createResult.Error!.Value.Code)
         {
             case ServiceErrorCode.NotFound:
                 return NotFound(createResult.Error.Value.Message);

@@ -7,9 +7,10 @@ COPY OrderManagementSystem.Docker.sln .
 COPY src/OrderManagementService.WebApi/OrderManagementService.WebApi.csproj ./src/OrderManagementService.WebApi/
 COPY src/OrderManagementService.Core/OrderManagementService.Core.csproj ./src/OrderManagementService.Core/
 COPY src/OrderManagementService.Infrastructure/OrderManagementService.Infrastructure.csproj ./src/OrderManagementService.Infrastructure/
+COPY src/OrderManagementService.Auth/OrderManagementService.Auth.csproj ./src/OrderManagementService.Auth/
 
 # Restore NuGet packages
-# RUN dotnet restore
+RUN dotnet restore
 
 # Copy the rest of the code
 COPY . .

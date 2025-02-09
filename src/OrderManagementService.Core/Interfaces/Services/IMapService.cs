@@ -1,5 +1,4 @@
 ﻿using OrderManagementService.Core.Entities;
-using OrderManagementService.Core.Models;
 
 namespace OrderManagementService.Core.Interfaces.Services;
 

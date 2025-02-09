@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace OrderManagementService.Core.Services;
+﻿namespace OrderManagementService.Core.Services;
 
 public class DatabaseException : Exception
 {

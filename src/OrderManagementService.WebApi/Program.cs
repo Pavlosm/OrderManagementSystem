@@ -1,5 +1,10 @@
+using System.Text;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
+using OrderManagementService.Auth;
 using OrderManagementService.Core;
 using OrderManagementService.Core.Entities;
 using OrderManagementService.Infrastructure;
@@ -11,11 +16,37 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(c =>
+{
+   c.AddSecurityDefinition("Bearer",
+       new OpenApiSecurityScheme
+       {
+           Description = "An JWT authorization header",
+           Type = SecuritySchemeType.Http,
+           Scheme = "bearer"
+       });
+
+   c.AddSecurityRequirement(new OpenApiSecurityRequirement{
+       {
+           new OpenApiSecurityScheme
+           {
+               Reference = new OpenApiReference
+               {
+                   Id = "Bearer",
+                   Type = ReferenceType.SecurityScheme
+               }
+           },new List<string>()
+       }
+   });
+
+   c.IgnoreObsoleteActions();
+   c.IgnoreObsoleteProperties();
+});
 
 // add the custom services
 builder.Services.AddDatabase();
 builder.Services.AddServices();
+builder.Services.AddAuthServices();
 
 // For Identity
 builder.Services
@@ -23,35 +54,32 @@ builder.Services
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddDefaultTokenProviders();
 
-// builder.Services
-//     .AddAuthentication(options =>
-//     {
-//         options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-//         options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-//         options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
-//     })
-//     .AddJwtBearer(options =>
-//     {
-//         options.SaveToken = true;
-//         options.RequireHttpsMetadata = false;
-//         options.TokenValidationParameters = new TokenValidationParameters
-//         {
-//             ValidateIssuer = true,
-//             ValidateAudience = true,
-//             ValidAudience = builder.Configuration["JWT:ValidAudience"],
-//             ValidIssuer = builder.Configuration["JWT:ValidIssuer"],
-//             ClockSkew = TimeSpan.Zero,
-//             IssuerSigningKey = new SymmetricSecurityKey(
-//                 Encoding.UTF8.GetBytes(
-//                     Environment.GetEnvironmentVariable("JWT_SECRET_KEY")))
-//         };
-//     });
+builder.Services
+    .AddAuthentication(options => 
+    {
+        options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+        options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+    })
+    .AddJwtBearer(options =>
+        {
+            options.SaveToken = true;
+            options.RequireHttpsMetadata = false;
+            options.TokenValidationParameters = new TokenValidationParameters
+            {
+                ValidateIssuer = true,
+                ValidateAudience = true,// TODO use proper configuration
+                ValidAudience = builder.Configuration["JWT:Audience"],
+                ValidIssuer = builder.Configuration["JWT:Issuer"],
+                ClockSkew = TimeSpan.Zero,
+                IssuerSigningKey = new SymmetricSecurityKey(
+                    Encoding.UTF8.GetBytes(builder.Configuration["JWT:Key"]!))
+            };
+        });
 
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-Console.WriteLine(app.Environment.IsDevelopment());
+// seed the DB
 if (app.Environment.IsDevelopment())
 {
     using (var scope = app.Services.CreateScope())

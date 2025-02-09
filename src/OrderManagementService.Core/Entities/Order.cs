@@ -33,4 +33,9 @@ public class Order : OrderBasic
     /// Gets or sets the delivery address for the order.
     /// </summary>
     public OrderDeliveryAddress? DeliveryAddress { get; set; } = null!;
+    
+    /// <summary>
+    /// Holds the unpublished domain events for the order. It should not be in the context of the order... but for simplicity, it is here.
+    /// </summary>
+    public virtual List<OrderDomainEventOutbox> UnpublishedEvents { get; set; } = [];
 }

@@ -19,12 +19,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Content Include="..\.dockerignore">
-        <Link>.dockerignore</Link>
-      </Content>
-    </ItemGroup>
-
-    <ItemGroup>
+      <ProjectReference Include="..\OrderManagementService.Auth\OrderManagementService.Auth.csproj" />
       <ProjectReference Include="..\OrderManagementService.Core\OrderManagementService.Core.csproj" />
       <ProjectReference Include="..\OrderManagementService.Infrastructure\OrderManagementService.Infrastructure.csproj" />
     </ItemGroup>

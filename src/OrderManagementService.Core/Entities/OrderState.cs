@@ -63,9 +63,7 @@ public class OrderState
         
         if (CompletedOrderStatus.Contains(order.Status))
         {
-            orderState.FulfillmentTimeMinutes = order.FulfillmentTimeMinutes;
         }
-
         if (order.DeliveryStaffId != null)
         {
             var (success, error) = orderState.SetDeliveryStaffId(order.DeliveryStaffId);

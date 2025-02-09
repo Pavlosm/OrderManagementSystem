@@ -21,7 +21,6 @@ public static class Helpers
         OrderBasic order, 
         BaseState state, 
         UpdatedTestStrategy updatedTestStrategy = UpdatedTestStrategy.LaterThanPrevious,
-        bool hasFulfilmentTime = false,
         string? deliveryStaffId = null)
     {
         Assert.Equal(order.Type, state.Type);
@@ -40,14 +39,6 @@ public static class Helpers
                 Assert.True(state.UpdatedAt > order.LastUpdatedAt);
                 break;
         }
-
-        var fulfilmentTimeMinutes = !hasFulfilmentTime
-            ?order.FulfillmentTimeMinutes
-            : state.UpdatedAt.HasValue 
-                ? (int)state.UpdatedAt.Value.Subtract(order.CreatedAt).TotalMinutes 
-                : (int)DateTime.UtcNow.Subtract(order.CreatedAt).TotalMinutes;
-        
-        Assert.Equal(fulfilmentTimeMinutes, state.FulfilmentTimeMinutes);
     }
     
     public enum UpdatedTestStrategy

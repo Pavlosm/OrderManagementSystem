@@ -327,9 +327,6 @@ namespace OrderManagementService.Infrastructure.Migrations
                     b.Property<string>("DeliveryStaffId")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int?>("FulfillmentTimeMinutes")
-                        .HasColumnType("int");
-
                     b.Property<DateTime?>("LastUpdatedAt")
                         .HasColumnType("datetime2");
 
@@ -433,6 +430,34 @@ namespace OrderManagementService.Infrastructure.Migrations
                         .IsUnique();
 
                     b.ToTable("OrderDeliveryAddresses");
+                });
+
+            modelBuilder.Entity("OrderManagementService.Core.Entities.OrderDomainEventOutbox", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("OrderId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OrderId");
+
+                    b.ToTable("OrderDomainEvents");
                 });
 
             modelBuilder.Entity("OrderManagementService.Core.Entities.OrderItem", b =>
@@ -553,6 +578,15 @@ namespace OrderManagementService.Infrastructure.Migrations
                         .HasConstraintName("FK_OrderDeliveryAddress_To_Order");
                 });
 
+            modelBuilder.Entity("OrderManagementService.Core.Entities.OrderDomainEventOutbox", b =>
+                {
+                    b.HasOne("OrderManagementService.Core.Entities.Order", null)
+                        .WithMany("UnpublishedEvents")
+                        .HasForeignKey("OrderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("OrderManagementService.Core.Entities.OrderItem", b =>
                 {
                     b.HasOne("OrderManagementService.Core.Entities.MenuItem", null)
@@ -576,6 +610,8 @@ namespace OrderManagementService.Infrastructure.Migrations
                     b.Navigation("DeliveryAddress");
 
                     b.Navigation("Items");
+
+                    b.Navigation("UnpublishedEvents");
                 });
 #pragma warning restore 612, 618
         }

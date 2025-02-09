@@ -14,7 +14,6 @@ public static class InfrastructureDiExtensions
             options.UseSqlServer(connectionString);
         });
 
-        services.AddScoped<IApplicationUserRepository, ApplicationUserRepository>();
         services.AddScoped<IMenuItemRepository, MenuItemRepository>();
         services.AddScoped<IOrderRepository, OrderRepository>();
         return services;

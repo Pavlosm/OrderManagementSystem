@@ -12,9 +12,6 @@ public class PickedUpState : BaseState
     public PickedUpState(BaseState previous) : base(previous)
     {
         ValidateOrderType();
-        FulfilmentTimeMinutes = UpdatedAt.HasValue 
-            ? (int)UpdatedAt.Value.Subtract(CreatedAt).TotalMinutes 
-            : (int)DateTime.UtcNow.Subtract(CreatedAt).TotalMinutes;
     }
 
     private void ValidateOrderType()

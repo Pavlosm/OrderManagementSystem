@@ -14,11 +14,20 @@ public interface IOrderRepository
         int orderId, 
         IOrderState state,
         string updatedBy,
-        byte[] rowVersion);
+        byte[] rowVersion,
+        OrderDomainEventOutbox eventOutbox);
     
     Task<long> SetDeliveryStaffAsync(
         int orderId, 
         IOrderState state,
         string updatedBy,
-        byte[] orderStateRowVersion);
+        byte[] orderStateRowVersion,
+        OrderDomainEventOutbox eventOutbox);
+    
+    Task<List<OrderDomainEventOutbox>> GetOrderDomainEventOutboxAsync();
+
+    Task DeleteDomainEventAsync(OrderDomainEventOutbox message);
+    Task<List<OrderBasic>> FindOrdersForDeliveryAsync(string userId);
+
+    Task<Statistics> GetStatisticsPerDayAsync();
 } 

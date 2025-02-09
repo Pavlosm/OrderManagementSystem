@@ -6,7 +6,6 @@ public abstract class BaseState : IOrderState
     
     public readonly OrderType Type;
     public readonly DateTime CreatedAt;
-    public int? FulfilmentTimeMinutes { get; protected set; }
     public string? DeliveryStaffId { get; protected set; }
     public DateTime? UpdatedAt { get; }
 

@@ -1,3 +1,4 @@
+using System.Text.Json;
 using OrderManagementService.Core.Entities;
 using OrderManagementService.Core.Entities.OrderStatePattern;
 using OrderManagementService.Core.Interfaces;
@@ -13,17 +14,20 @@ public class OrderService : IOrderService
     private readonly IMenuItemService _menuItemService;
     private readonly IMapService _mapService;
     private readonly IStateFactory _stateFactory;
+    private readonly IOrderPublisherService _orderPublisherService;
 
     public OrderService(
         IOrderRepository orderRepository, 
         IMenuItemService menuItemService, 
         IMapService mapService,
-        IStateFactory stateFactory)
+        IStateFactory stateFactory, 
+        IOrderPublisherService orderPublisherService)
     {
         _orderRepository = orderRepository;
         _menuItemService = menuItemService;
         _mapService = mapService;
         _stateFactory = stateFactory;
+        _orderPublisherService = orderPublisherService;
     }
 
     public async Task<ServiceResult<Order>> GetFullOrderAsync(int id)
@@ -54,12 +58,23 @@ public class OrderService : IOrderService
         }
     }
 
+    public async Task<ServiceResult<List<OrderBasic>>> FindOrdersForDeliveryAsync(string userId)
+    {
+        try
+        {
+            var orders = await _orderRepository.FindOrdersForDeliveryAsync(userId);
+            return ServiceResult<List<OrderBasic>>.Ok(orders);
+        }
+        catch (Exception ex)
+        {
+            return ServiceResult<List<OrderBasic>>.Fail(ServiceErrorCode.Generic, ex.Message, ex);
+        }
+    }
+
     public async Task<ServiceResult<Order>> PlaceOrderAsync(string userId, OrderPlacementRequest orderPlacementRequest)
     {
         try
         {
-            // TODO validate contact details - skip due to time constraints
-            
             if (orderPlacementRequest.OrderType == OrderType.Delivery)
             {
                 if (orderPlacementRequest.DeliveryAddress == null)
@@ -135,8 +150,16 @@ public class OrderService : IOrderService
                 
                 order.TotalAmount += menuItem.Price * details.Quantity;
             }
-            
+            var @event = new OrderDomainEventOutbox
+            {
+                OrderId = order.Id,
+                Type = MessageType.Created,
+                Message = JsonSerializer.Serialize(order, new JsonSerializerOptions { WriteIndented = true }),
+                CreatedAt = DateTime.UtcNow
+            };
+            order.UnpublishedEvents.Add(@event);
             order.Id = await _orderRepository.CreateAsync(order);
+            _orderPublisherService.PublishOrderAsync(@event).Ignore();
 
             return ServiceResult<Order>.Ok(order);
         }
@@ -157,22 +180,29 @@ public class OrderService : IOrderService
             }
         
             var (state, error) = _stateFactory.CreateState(order).Transition(statusId);
-            if (error != null)
+            if (!string.IsNullOrEmpty(error))
             {
                 return VoidServiceResult.Fail(ServiceErrorCode.BadRequest, error);
             }
 
-            var updatedCount = await _orderRepository.UpdateStatusAsync(orderId, state, userId, order.RowVersion);
+            var @event = CreateDomainEvent(orderId, userId, order, state);
+            
+            var updatedCount = await _orderRepository.UpdateStatusAsync(
+                orderId, 
+                state, 
+                userId, 
+                order.RowVersion, 
+                @event);
             
             if (updatedCount > 0)
             {
-                // TODO publish event
+                _orderPublisherService.PublishOrderAsync(@event).Ignore();
             }
         
             return updatedCount switch
             {
                 0 => VoidServiceResult.Fail(ServiceErrorCode.NotFound, "Update failed, order not found"),
-                > 1 => VoidServiceResult.Fail(ServiceErrorCode.Generic, "This should never happen"),
+                > 2 => VoidServiceResult.Fail(ServiceErrorCode.Generic, "This should never happen"),
                 _ => VoidServiceResult.Ok()
             };
         }
@@ -181,7 +211,7 @@ public class OrderService : IOrderService
             return VoidServiceResult.Fail(ServiceErrorCode.Generic, ex.Message, ex);
         }
     }
-    
+
     public async Task<VoidServiceResult> SetDeliveryStatus(string userId, int orderId, string deliveryStaffId)
     {
         try
@@ -193,22 +223,29 @@ public class OrderService : IOrderService
             }
         
             var (state, error) = _stateFactory.CreateState(order).SetDeliveryStaffId(deliveryStaffId);
-            if (error != null)
+            if (!string.IsNullOrEmpty(error))
             {
                 return VoidServiceResult.Fail(ServiceErrorCode.BadRequest, error);
             }
+            
+            var @event = CreateDomainEvent(orderId, userId, order, state); // should create a proper event here
 
-            var updatedCount = await _orderRepository.SetDeliveryStaffAsync(orderId, state, userId, order.RowVersion);
+            var updatedCount = await _orderRepository.SetDeliveryStaffAsync(
+                orderId, 
+                state, 
+                userId, 
+                order.RowVersion,
+                @event);
             
             if (updatedCount > 0)
             {
-                // TODO publish event
+                _orderPublisherService.PublishOrderAsync(@event).Ignore();
             }
         
             return updatedCount switch
             {
                 0 => VoidServiceResult.Fail(ServiceErrorCode.NotFound, "Update failed, order not found"),
-                > 1 => VoidServiceResult.Fail(ServiceErrorCode.Generic, "This should never happen"),
+                > 2 => VoidServiceResult.Fail(ServiceErrorCode.Generic, "This should never happen"),
                 _ => VoidServiceResult.Ok()
             };
         }
@@ -216,5 +253,60 @@ public class OrderService : IOrderService
         {
             return VoidServiceResult.Fail(ServiceErrorCode.Generic, ex.Message, ex);
         }
+    }
+
+    public async Task<VoidServiceResult> PublishUnPublishedDomainEventsAsync()
+    {
+        try
+        {
+            const int maxDop = 10;
+            var events = await _orderRepository.GetOrderDomainEventOutboxAsync();
+            var chunkSize = Math.Max(1, events.Count / maxDop);
+            var chunks = events.OrderBy(e => e.CreatedAt).Chunk(chunkSize);
+            var tasks = chunks.Select(async chunk =>
+            {
+                foreach (var @event in chunk)
+                {
+                    await _orderPublisherService.PublishOrderAsync(@event);
+                }
+            });
+            await Task.WhenAll(tasks);
+            return VoidServiceResult.Ok();
+        }
+        catch (Exception e)
+        {
+            return VoidServiceResult.Fail(ServiceErrorCode.Generic, "Could not publish domain event",  e);
+        }
+    }
+
+    public async Task<ServiceResult<Statistics>> GetStatisticsPerDayAsync()
+    {
+        try
+        {
+            var statistics = await _orderRepository.GetStatisticsPerDayAsync();
+            return ServiceResult<Statistics>.Ok(statistics);
+        }
+        catch (Exception e)
+        {
+            return ServiceResult<Statistics>.Fail(ServiceErrorCode.Generic, "Could not publish domain event",  e);
+        }
+    }
+
+    private static OrderDomainEventOutbox CreateDomainEvent(int orderId,  string userId, OrderBasic order, IOrderState state)
+    {
+        // should create a proper event here
+        order.Status = state.Status;
+        order.DeliveryStaffId = state.DeliveryStaffId;
+        order.LastUpdatedAt = state.UpdatedAt;
+        order.LastUpdatedBy = userId;
+        
+        var @event = new OrderDomainEventOutbox
+        {
+            OrderId = orderId,
+            Type = MessageType.Updated,
+            Message = JsonSerializer.Serialize(order, new JsonSerializerOptions { WriteIndented = true }),
+            CreatedAt = order.LastUpdatedAt ?? DateTime.UtcNow
+        };
+        return @event;
     }
 } 

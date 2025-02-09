@@ -20,7 +20,7 @@ public class PreparingStateTests
          var (newState, error) = state.Transition(status);
          Assert.IsType(expectedType, newState);
          Assert.Equal(error, string.Empty);
-         Helpers.AssertEqual(order, (BaseState)newState, Helpers.UpdatedTestStrategy.LaterThanPrevious);
+         Helpers.AssertEqual(order, (BaseState)newState);
      }
      
      [Theory]

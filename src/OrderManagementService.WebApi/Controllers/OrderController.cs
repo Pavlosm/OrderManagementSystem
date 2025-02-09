@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using System.Security.Claims;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using OrderManagementService.Core.Entities;
 using OrderManagementService.Core.Interfaces;
@@ -10,7 +12,6 @@ namespace OrderManagementService.WebApi.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-[AllowAnonymous]
 public class OrderController : ControllerBase
 {
     private readonly ILogger<MenuItemController> _logger;
@@ -33,13 +34,13 @@ public class OrderController : ControllerBase
             return Ok(orderResult.Data);
         }
 
-        if (orderResult.Error.Value.Code == ServiceErrorCode.NotFound)
+        if (orderResult.Error!.Value.Code == ServiceErrorCode.NotFound)
         {
             return NotFound();
         }
         
         _logger.LogError(
-            orderResult.Error.Value.Exception,
+            orderResult.Error!.Value.Exception,
             "An error occurred while trying to get order: {message}", orderResult.Error.Value.Message);
         
         return StatusCode(500, "An error occurred while trying to get order");
@@ -62,7 +63,7 @@ public class OrderController : ControllerBase
         }
         
         _logger.LogError(
-            ordersResult.Error.Value.Exception,
+            ordersResult.Error!.Value.Exception,
             "An error occurred while trying to get orders: {message}", ordersResult.Error.Value.Message);
         
         return StatusCode(500, "An error occurred while trying to get orders");
@@ -93,14 +94,40 @@ public class OrderController : ControllerBase
     }
     
     [HttpPatch("{id:int}/status")]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     public async Task<IActionResult> UpdateOrderStatusAsync(int id, [FromBody] OrderStatus status)
     {
-        //var user = User.FindFirst(ClaimTypes.NameIdentifier);
-        var updateResult = await _orderService.UpdateStatusAsync(
-            DbInit.DbAdminId,
-            id,
-            status);
+        var userId = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
+        if (userId == null)
+        {
+            return Unauthorized("Could not find user id in claims");
+        }
+     
+        var roles = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role);
+        switch (status)
+        {
+            case OrderStatus.Preparing:
+            case OrderStatus.ReadyForPickup:
+            case OrderStatus.ReadyForDelivery:
+            case OrderStatus.PickedUp:
+                if (roles?.Value != Role.ReasturantStuff && roles?.Value != Role.Admin)
+                {
+                    return Forbid();
+                }
+                break;
+            case OrderStatus.UnableToDeliver:
+            case OrderStatus.OutForDelivery:
+            case OrderStatus.Delivered:
+                if (roles?.Value != Role.DeliveryStaff && roles?.Value != Role.Admin)
+                {
+                    return Forbid();
+                }
+                break;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(status), status, null);
+        }
         
+        var updateResult = await _orderService.UpdateStatusAsync(userId.Value, id, status);
         if (updateResult.Success)
         {
             _logger.LogInformation("Order {id} status updated successfully", id);
@@ -122,12 +149,20 @@ public class OrderController : ControllerBase
         }
     }
     
-    [HttpPatch("{id:int}/delivery")]
-    public async Task<IActionResult> SetDeliveryStatusAsync(int id, [FromBody] string deliveryStaffId)
+    [HttpPatch("{id:int}/delivery-stuff")]
+    [Authorize(Roles = $"{Role.Admin},{Role.ReasturantStuff}")]
+    public async Task<IActionResult> SetDeliveryStaffAsync(int id, [FromBody] string deliveryStaffId)
     {
-        //var user = User.FindFirst(ClaimTypes.NameIdentifier);
+        var userId = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
+        if (userId == null)
+        {
+            return Unauthorized("Could not find user id in claims");
+        }
+        
+        // TODO validate deliveryStaffId
+        
         var updateResult = await _orderService.SetDeliveryStatus(
-            DbInit.DbAdminId,
+            userId.Value,
             id,
             deliveryStaffId);
         
@@ -150,5 +185,45 @@ public class OrderController : ControllerBase
                     updateResult.Error.Value.Message);
                 return StatusCode(500, "An error occurred while trying to update order delivery status");
         }
+    }
+    
+    [HttpGet("delivery-stuff/my-orders")]
+    [Authorize(Roles = Role.DeliveryStaff)]
+    public async Task<IActionResult> GetMyOrdersAsync()
+    {
+        var userId = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
+        if (userId == null)
+        {
+            return Unauthorized("Could not find user id in claims");
+        }
+        
+        var ordersResult = await _orderService.FilterOrdersAsync(null, null);
+        if (ordersResult.Success)
+        {
+            return Ok(ordersResult.Data);
+        }
+        
+        _logger.LogError(
+            ordersResult.Error!.Value.Exception,
+            "An error occurred while trying to get orders: {message}", ordersResult.Error.Value.Message);
+        
+        return StatusCode(500, "An error occurred while trying to get orders");
+    }
+    
+    [HttpGet("statistics")]
+    [Authorize(Roles = Role.Admin)]
+    public async Task<IActionResult> GetStatisticsAsync([FromQuery] DateTime? from, [FromQuery] DateTime? to)
+    {
+        var statisticsResult = await _orderService.GetStatisticsPerDayAsync();
+        if (statisticsResult.Success)
+        {
+            return Ok(statisticsResult.Data);
+        }
+        
+        _logger.LogError(
+            statisticsResult.Error!.Value.Exception,
+            "An error occurred while trying to get statistics: {message}", statisticsResult.Error.Value.Message);
+        
+        return StatusCode(500, "An error occurred while trying to get statistics");
     }
 }

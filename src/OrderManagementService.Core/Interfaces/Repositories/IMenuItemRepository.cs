@@ -1,7 +1,4 @@
-using System.Collections.Generic;
-using System.Threading.Tasks;
 using OrderManagementService.Core.Entities;
-using OrderManagementService.Core.Models;
 
 namespace OrderManagementService.Core.Interfaces.Repositories;
 

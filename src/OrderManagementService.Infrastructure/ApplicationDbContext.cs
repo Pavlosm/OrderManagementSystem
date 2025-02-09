@@ -16,6 +16,8 @@ public class ApplicationDbContext(DbContextOptions options) : IdentityDbContext<
     
     public DbSet<OrderDeliveryAddress> OrderDeliveryAddresses { get; set; }
     
+    public DbSet<OrderDomainEventOutbox> OrderDomainEvents { get; set; }
+    
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder
@@ -30,6 +32,12 @@ public class ApplicationDbContext(DbContextOptions options) : IdentityDbContext<
         modelBuilder
             .Entity<Order>()
             .HasMany(order => order.Items)
+            .WithOne()
+            .HasForeignKey(c => c.OrderId);
+        
+        modelBuilder
+            .Entity<Order>()
+            .HasMany(order => order.UnpublishedEvents)
             .WithOne()
             .HasForeignKey(c => c.OrderId);
         
