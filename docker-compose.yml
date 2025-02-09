@@ -11,8 +11,8 @@ services:
       - "5001:443"
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - ASPNETCORE_URLS=http://+:80;https://+:443
-      - ConnectionStrings__DefaultConnection=Server=db;Database=OrderManagementDB;User=sa;Password=Your_Strong_Password123!;TrustServerCertificate=True
+      - ASPNETCORE_URLS=http://+:80;
+      - SQL_CONNECTION_STRING=Server=db;Database=OrderManagementDB;User=sa;Password=Your_Strong_Password123!;TrustServerCertificate=True
     depends_on:
       - db
     networks:

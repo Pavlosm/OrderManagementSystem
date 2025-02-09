@@ -1,24 +1,24 @@
 # Build stage
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
-WORKDIR /src
+##WORKDIR
 
 # Copy solution and project files
-COPY *.sln .
-COPY OrderManagementService/*.csproj ./OrderManagementService/
-COPY OrderManagementService.Core/*.csproj ./OrderManagementService.Core/
-COPY OrderManagementService.Infrastructure/*.csproj ./OrderManagementService.Infrastructure/
+COPY OrderManagementSystem.Docker.sln .
+COPY src/OrderManagementService.WebApi/OrderManagementService.WebApi.csproj ./src/OrderManagementService.WebApi/
+COPY src/OrderManagementService.Core/OrderManagementService.Core.csproj ./src/OrderManagementService.Core/
+COPY src/OrderManagementService.Infrastructure/OrderManagementService.Infrastructure.csproj ./src/OrderManagementService.Infrastructure/
 
 # Restore NuGet packages
-RUN dotnet restore
+# RUN dotnet restore
 
 # Copy the rest of the code
 COPY . .
 
 # Build and publish
-RUN dotnet publish -c Release -o /app
+RUN dotnet publish OrderManagementSystem.Docker.sln -c Release -o /app
 
 # Runtime stage
-FROM mcr.microsoft.com/dotnet/aspnet:8.0
+FROM mcr.microsoft.com/dotnet/aspnet:9.0
 WORKDIR /app
 COPY --from=build /app .
 
@@ -30,4 +30,4 @@ USER nonroot
 EXPOSE 80
 EXPOSE 443
 
-ENTRYPOINT ["dotnet", "OrderManagementService.dll"]
+ENTRYPOINT ["dotnet", "OrderManagementService.WebApi.dll"]

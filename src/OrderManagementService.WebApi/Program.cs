@@ -1,7 +1,5 @@
-using System.Text;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.IdentityModel.Tokens;
+using Microsoft.EntityFrameworkCore;
 using OrderManagementService.Core;
 using OrderManagementService.Core.Entities;
 using OrderManagementService.Infrastructure;
@@ -49,11 +47,23 @@ builder.Services
 //         };
 //     });
 
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
+Console.WriteLine(app.Environment.IsDevelopment());
 if (app.Environment.IsDevelopment())
 {
+    using (var scope = app.Services.CreateScope())
+    {
+        var services = scope.ServiceProvider;
+
+        var context = services.GetRequiredService<ApplicationDbContext>();
+        if (context.Database.GetPendingMigrations().Any())
+        {
+            context.Database.Migrate();
+        }
+    }
     app.UseSwagger();
     app.UseSwaggerUI();
 }
