@@ -14,7 +14,7 @@ public static class DiExtensions
         services.AddScoped<IOrderService, OrderService>();
         services.AddScoped<IMapService, DummyMapService>();
         services.AddSingleton<IStateFactory, StateFactory>();
-        services.AddScoped<IOrderPublisherService, OrderPublisherService>();
+        services.AddSingleton<IOrderPublisherService, OrderPublisherService>();
         services.AddHostedService<OrderOutboxService>();
         return services;
     }
