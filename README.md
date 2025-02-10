@@ -56,6 +56,10 @@ How to run:
 - `Docker`: To run the application using `docker` just `cd` into the root directory of the application and run the following command: `docker-compose up -d`. 
   - Access the application at http://localhost:5000/swagger/index.html
   - The solution contains a `Dockerfile` and a `docker-compose.yml` file that contain all the necessary configurations to run the application in a docker container.
+  - _feeling lucky?_
+    - uncomment the code in `OrderPublisherService.cs`
+    - open KafkaUi, navigate to `Topics` create a topic with name `OrderDomainEvents`
+    - start placing and updating orders, you should see the events in the KafkaUi. If not the outbox messages should be piling up in `[dbo].[OrderDomainEvents]` outbox
 - `Local`: 
   - install the .NET 9.0 if not already installed - https://dotnet.microsoft.com/en-us/download/dotnet/9.0
   - set the `SQL_CONNECTION_STRING` variables mentioned above to point to a valid SQL Server instance.
