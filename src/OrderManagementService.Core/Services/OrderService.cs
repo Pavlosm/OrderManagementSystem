@@ -159,7 +159,7 @@ public class OrderService : IOrderService
             };
             order.UnpublishedEvents.Add(@event);
             order.Id = await _orderRepository.CreateAsync(order);
-            _orderPublisherService.PublishOrderAsync(@event).Ignore();
+            await _orderPublisherService.PublishOrderAsync(@event);
 
             return ServiceResult<Order>.Ok(order);
         }
@@ -196,7 +196,7 @@ public class OrderService : IOrderService
             
             if (updatedCount > 0)
             {
-                _orderPublisherService.PublishOrderAsync(@event).Ignore();
+                await _orderPublisherService.PublishOrderAsync(@event);
             }
         
             return updatedCount switch
@@ -239,7 +239,7 @@ public class OrderService : IOrderService
             
             if (updatedCount > 0)
             {
-                _orderPublisherService.PublishOrderAsync(@event).Ignore();
+                await _orderPublisherService.PublishOrderAsync(@event);
             }
         
             return updatedCount switch
